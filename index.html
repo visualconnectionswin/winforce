@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Procesador de archivos de clientes</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+    }
+    #drop-area {
+      border: 2px dashed #ccc;
+      border-radius: 20px;
+      padding: 10px;
+      text-align: center;
+      margin-bottom: 20px;
+      transition: border-color 0.3s;
+    }
+    #drop-area.highlight {
+      border-color: purple;
+    }
+    .client-block {
+      border: 1px solid #ccc;
+      border-radius: 10px;
+      padding: 10px;
+      margin-bottom: 10px;
+      /* Color inicial verde para cada cliente */
+      background-color: #aef39b;
+    }
+    button {
+      margin-top: 10px;
+      padding: 5px 10px;
+    }
+    pre {
+      white-space: pre-wrap;
+      word-wrap: break-word;
+    }
+  </style>
+  <!-- Se incluye la librería XLSX para leer archivos Excel -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+</head>
+<body>
+  <h1>Procesador de archivos de clientes</h1>
+  <p>Arrastra y suelta un archivo o haz clic en el botón para seleccionar uno desde tu dispositivo.</p>
+  <div id="drop-area">
+    <p>Arrastra y suelta el archivo aquí</p>
+    <p>o</p>
+    <input type="file" id="file-input" accept=".xls,.xlsx,.html,.htm">
+  </div>
+  <div id="results"></div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const dropArea = document.getElementById('drop-area');
+      const fileInput = document.getElementById('file-input');
+      const resultsContainer = document.getElementById('results');
+
+      // Previene comportamientos por defecto (evita que el navegador abra el archivo)
+      ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+        dropArea.addEventListener(eventName, preventDefaults, false);
+        document.body.addEventListener(eventName, preventDefaults, false);
+      });
+      function preventDefaults(e) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+
+      // Resalta el área al arrastrar el archivo
+      ['dragenter', 'dragover'].forEach(eventName => {
+        dropArea.addEventListener(eventName, () => {
+          dropArea.classList.add('highlight');
+        }, false);
+      });
+      ['dragleave', 'drop'].forEach(eventName => {
+        dropArea.addEventListener(eventName, () => {
+          dropArea.classList.remove('highlight');
+        }, false);
+      });
+
+      // Maneja el evento de soltar el archivo
+      dropArea.addEventListener('drop', handleDrop, false);
+      function handleDrop(e) {
+        let dt = e.dataTransfer;
+        let files = dt.files;
+        handleFiles(files);
+      }
+
+      // Maneja la selección del archivo desde el input
+      fileInput.addEventListener('change', (e) => {
+        let files = e.target.files;
+        handleFiles(files);
+      });
+
+      function handleFiles(files) {
+        if (files.length === 0) return;
+        const file = files[0];
+        // Limpia resultados anteriores
+        resultsContainer.innerHTML = '';
+        // Verifica la extensión del archivo para determinar cómo leerlo
+        const fileName = file.name.toLowerCase();
+        if (fileName.endsWith('.xls') || fileName.endsWith('.xlsx')) {
+          readExcel(file);
+        } else if (fileName.endsWith('.html') || fileName.endsWith('.htm')) {
+          readHtml(file);
+        } else {
+          alert('Formato de archivo no soportado.');
+        }
+      }
+
+      // Función para leer archivos Excel utilizando la librería XLSX
+      function readExcel(file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          let data = e.target.result;
+          let workbook = XLSX.read(data, { 
+            type: 'binary',
+            cellText: true
+          });
+          let firstSheetName = workbook.SheetNames[0];
+          let worksheet = workbook.Sheets[firstSheetName];
+          
+          // Extraer los datos manteniendo el formato original de las celdas
+          const rawData = [];
+          
+          // Obtener rango de celdas
+          const range = XLSX.utils.decode_range(worksheet['!ref']);
+          
+          for (let r = range.s.r; r <= range.e.r; r++) {
+            const row = [];
+            for (let c = range.s.c; c <= range.e.c; c++) {
+              const cellRef = XLSX.utils.encode_cell({r: r, c: c});
+              const cell = worksheet[cellRef];
+              
+              if (!cell) {
+                row.push('');
+                continue;
+              }
+              
+              // Usar directamente el valor formateado (w) para números (preserva ceros a la izquierda)
+              if (cell.t === 'n' && cell.w) {
+                row.push(cell.w);
+              } else {
+                row.push(cell.v);
+              }
+            }
+            rawData.push(row);
+          }
+          
+          processData(rawData);
+        };
+        reader.onerror = function(err) {
+          alert("Error al leer el archivo Excel.");
+        };
+        reader.readAsBinaryString(file);
+      }
+
+      // Función para leer archivos HTML y extraer la primera tabla
+      function readHtml(file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          const htmlText = e.target.result;
+          const parser = new DOMParser();
+          const doc = parser.parseFromString(htmlText, 'text/html');
+          const table = doc.querySelector('table');
+          if (!table) {
+            alert("No se encontró una tabla en el archivo HTML.");
+            return;
+          }
+          let rows = [];
+          const trElements = table.querySelectorAll('tr');
+          trElements.forEach(tr => {
+            let row = [];
+            const cells = tr.querySelectorAll('th, td');
+            cells.forEach(cell => {
+              row.push(cell.textContent.trim());
+            });
+            rows.push(row);
+          });
+          processData(rows);
+        };
+        reader.onerror = function(err) {
+          alert("Error al leer el archivo HTML.");
+        };
+        reader.readAsText(file);
+      }
+
+      // Procesa los datos leídos y los clasifica en secciones según los criterios:
+      // - Se omite la fila 1 (encabezados)
+      // - Clientes instalados: estado de orden (col AB, índice 27) es "Ejecutada"
+      // - Clientes programados: estado de pedido (col Y, índice 24) es "Validado" y estado de orden (col AB) es "Programada",
+      //   y además, de acuerdo a la fecha (col AK, índice 36) y hora (col AL, índice 37), la franja de 4 horas aún no venció.
+      // - Clientes revisados: cuando el estado de pedido (col Y) es "revisado"
+      // - Clientes no instalados: cuando se cumplen los criterios de validado y programada, pero la fecha/hora ya pasó.
+      // - Clientes en progreso: cuando el estado de pedido (col Y) es "En progreso"
+      // - Clientes desaprobados: el resto, mostrando la diferencia entre el valor de la columna AB (índice 27) y la columna AC (índice 28)
+      function processData(rows) {
+        const now = new Date();
+        // Crear contenedores para cada sección
+        const installedContainer = document.createElement('div');
+        installedContainer.innerHTML = "<h2>Clientes instalados</h2>";
+        const programmedContainer = document.createElement('div');
+        programmedContainer.innerHTML = "<h2>Clientes programados</h2>";
+        const reviewedContainer = document.createElement('div');
+        reviewedContainer.innerHTML = "<h2>Clientes revisados</h2>";
+        const notInstalledContainer = document.createElement('div');
+        notInstalledContainer.innerHTML = "<h2>Clientes no instalados</h2>";
+        const inProgressContainer = document.createElement('div');
+        inProgressContainer.innerHTML = "<h2>Clientes en progreso</h2>";
+        const desaprobadosContainer = document.createElement('div');
+        desaprobadosContainer.innerHTML = "<h2>Clientes desaprobados</h2>";
+
+        // Se omite la primera fila (encabezados)
+        for (let i = 1; i < rows.length; i++) {
+          let row = rows[i];
+          try {
+            // Columnas relevantes:
+            // Nombre: columna H (índice 7)
+            // DNI: columna G (índice 6)
+            // Estado de pedido: columna Y (índice 24)
+            // Estado de orden: columna AB (índice 27)
+            // Fecha de programación: columna AK (índice 36)
+            // Hora / tramo: columna AL (índice 37)
+            // Para desaprobados, se usa columna AC (índice 28)
+            let nombre = row[7] || '';
+            let dni = row[6] || '';
+            let statePedido = (row[24] || "").trim().toLowerCase();
+            let estadoOrden = (row[27] || "").trim().toLowerCase();
+            let category = "";
+            
+            if (estadoOrden === "ejecutada") {
+              category = "installed";
+            } else if (statePedido === "validado" && estadoOrden === "programada" && row[36] && row[36].trim() !== "" && row[37] && row[37].trim() !== "") {
+              let scheduledDateStr = row[36].trim(); // formato dd-mm-yyyy
+              let scheduledTimeStr = row[37].trim();
+              let dateParts = scheduledDateStr.split("-");
+              if (dateParts.length < 3) {
+                category = "desaprobados";
+              } else {
+                let day = parseInt(dateParts[0], 10);
+                let month = parseInt(dateParts[1], 10) - 1;
+                let year = parseInt(dateParts[2], 10);
+                let timeParts = scheduledTimeStr.split(/[:\s]+/);
+                let hour = parseInt(timeParts[0], 10);
+                let minute = parseInt(timeParts[1], 10);
+                let second = parseInt(timeParts[2], 10);
+                if (timeParts.length > 3) {
+                  let ampm = timeParts[3].toUpperCase();
+                  if (ampm === "PM" && hour < 12) { hour += 12; }
+                  if (ampm === "AM" && hour === 12) { hour = 0; }
+                }
+                let scheduledDateTime = new Date(year, month, day, hour, minute, second);
+                // Fin de la franja: se suma 4 horas a la hora programada
+                let scheduledEndTime = new Date(scheduledDateTime.getTime() + 4 * 60 * 60 * 1000);
+                if (now <= scheduledEndTime) {
+                  category = "programmed";
+                } else {
+                  category = "notInstalled";
+                }
+              }
+            } else if (statePedido === "revisado") {
+              category = "reviewed";
+            } else if (statePedido === "en progreso") {
+              category = "inProgress";
+            } else {
+              category = "desaprobados";
+            }
+            
+            // Crear el bloque del cliente
+            const clientDiv = document.createElement('div');
+            clientDiv.classList.add('client-block');
+            let contentHTML = "";
+            if (category === "installed") {
+              contentHTML = `
+                <p>Nombre: ${nombre}</p>
+                <p>DNI: <span class="dni" style="cursor: pointer; text-decoration: underline;">${dni}</span></p>
+                <p>Instalada!</p>
+              `;
+            } else if (category === "programmed") {
+              let scheduledTime = row[37] || "";
+              let tramo = "";
+              if (scheduledTime.startsWith("8")) {
+                tramo = "8 a 12";
+              } else if (scheduledTime.startsWith("12")) {
+                tramo = "12 a 4";
+              } else if (scheduledTime.startsWith("16") || scheduledTime.startsWith("4")) {
+                tramo = "4 a 8";
+              } else {
+                tramo = scheduledTime;
+              }
+              contentHTML = `
+                <p>Nombre: ${nombre}</p>
+                <p>DNI: <span class="dni" style="cursor: pointer; text-decoration: underline;">${dni}</span></p>
+                <p>Programado para: ${row[36]} de ${tramo}</p>
+              `;
+            } else if (category === "reviewed") {
+              contentHTML = `
+                <p>Nombre: ${nombre}</p>
+                <p>DNI/RUC: <span class="dni" style="cursor: pointer; text-decoration: underline;">${dni}</span></p>
+                <p>Número de contacto: ${row[9] || ''}</p>
+                <p>Distrito: ${row[13] || ''}</p>
+                <p>Llamar a programar por favor</p>
+              `;
+            } else if (category === "notInstalled") {
+              contentHTML = `
+                <p>Nombre: ${nombre}</p>
+                <p>DNI: <span class="dni" style="cursor: pointer; text-decoration: underline;">${dni}</span></p>
+                <p>Celular: ${row[9] || ''}</p>
+                <p>Distrito: ${row[13] || ''}</p>
+                <p>Me puede facilitar información del status de este cliente por favor</p>
+              `;
+            } else if (category === "inProgress") {
+              contentHTML = `
+                <p>Nombre: ${nombre}</p>
+                <p>DNI: <span class="dni" style="cursor: pointer; text-decoration: underline;">${dni}</span></p>
+                <p>En progreso</p>
+              `;
+            } else if (category === "desaprobados") {
+              contentHTML = `
+                <p>Nombre: ${nombre}</p>
+                <p>DNI: <span class="dni" style="cursor: pointer; text-decoration: underline;">${dni}</span></p>
+                <p>${row[24] || ''} - ${row[25] || ''}</p>
+              `;
+            }
+            clientDiv.innerHTML = contentHTML;
+            
+            // Funcionalidad para copiar solo el DNI al hacer clic
+            const dniSpan = clientDiv.querySelector('.dni');
+            dniSpan.addEventListener('click', () => {
+              const originalText = dniSpan.textContent;
+              navigator.clipboard.writeText(originalText)
+                .then(() => {
+                  dniSpan.textContent = "copiado";
+                  setTimeout(() => {
+                    dniSpan.textContent = originalText;
+                  }, 1000);
+                })
+                .catch(err => {
+                  alert("Error al copiar el DNI/RUC.");
+                });
+            });
+            
+            // Botón para copiar la información completa del cliente y cambiar el color del bloque
+            const copyButton = document.createElement('button');
+            copyButton.textContent = 'Copiar';
+            copyButton.addEventListener('click', () => {
+              let textToCopy = clientDiv.textContent.replace('Copiar','').trim();
+              navigator.clipboard.writeText(textToCopy)
+                .then(() => {
+                  copyButton.textContent = 'Copiado!';
+                  clientDiv.style.backgroundColor = "#e4e9de";
+                  setTimeout(() => {
+                    copyButton.textContent = 'Copiar';
+                  }, 2000);
+                })
+                .catch(err => {
+                  alert("Error al copiar el texto.");
+                });
+            });
+            clientDiv.appendChild(copyButton);
+            
+            // Agregar el bloque al contenedor correspondiente
+            if (category === "installed") {
+              installedContainer.appendChild(clientDiv);
+            } else if (category === "programmed") {
+              programmedContainer.appendChild(clientDiv);
+            } else if (category === "reviewed") {
+              reviewedContainer.appendChild(clientDiv);
+            } else if (category === "notInstalled") {
+              notInstalledContainer.appendChild(clientDiv);
+            } else if (category === "inProgress") {
+              inProgressContainer.appendChild(clientDiv);
+            } else if (category === "desaprobados") {
+              desaprobadosContainer.appendChild(clientDiv);
+            }
+          } catch(err) {
+            console.error(`Error procesando la fila ${i}: ${err}`);
+          }
+        }
+        resultsContainer.appendChild(installedContainer);
+        resultsContainer.appendChild(programmedContainer);
+        resultsContainer.appendChild(reviewedContainer);
+        resultsContainer.appendChild(notInstalledContainer);
+        resultsContainer.appendChild(inProgressContainer);
+        resultsContainer.appendChild(desaprobadosContainer);
+      }
+    });
+  </script>
+</body>
+</html>
