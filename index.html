@@ -227,15 +227,30 @@
       // - Clientes desaprobados: el resto, mostrando la diferencia entre el valor de la columna AB (índice 27) y la columna AC (índice 28)
       function processData(rows) {
         const now = new Date();
-        // Función para crear cada contenedor de categoría con su título y contenedor flex para los clientes
+        // Función para actualizar el contador de clientes en cada sección
+        function updateCount(categoryContainer) {
+          categoryContainer.countSpan.textContent = " (" + categoryContainer.clientsContainer.childElementCount + ")";
+        }
+        // Función para crear cada contenedor de categoría con su título, contador y contenedor flex para los clientes
         const createCategoryContainer = (title) => {
           const container = document.createElement('div');
           const header = document.createElement('h2');
           header.style.cursor = 'pointer';
-          // Creamos un span para el indicador de expandir/contraer
+          // Crear span para el título, contador y el indicador de expandir/contraer
+          const titleSpan = document.createElement('span');
+          titleSpan.textContent = title;
+          const countSpan = document.createElement('span');
+          countSpan.textContent = " (0)";
+          countSpan.style.fontSize = "0.8em";
+          countSpan.style.marginLeft = "10px";
           const toggleIndicator = document.createElement('span');
-          toggleIndicator.textContent = ' - '; // Estado inicial: expandido
-          header.textContent = title;
+          toggleIndicator.style.fontSize = "0.8em";
+          toggleIndicator.style.marginLeft = "10px";
+          // Estado inicial: expandido
+          toggleIndicator.textContent = "Ocultar [-]";
+          // Agregar los spans al header
+          header.appendChild(titleSpan);
+          header.appendChild(countSpan);
           header.appendChild(toggleIndicator);
           const clientsContainer = document.createElement('div');
           clientsContainer.classList.add('clients-container');
@@ -246,13 +261,13 @@
           header.addEventListener('click', () => {
             if(clientsContainer.style.display === 'none'){
               clientsContainer.style.display = 'flex';
-              toggleIndicator.textContent = ' - ';
+              toggleIndicator.textContent = 'Ocultar [-]';
             } else {
               clientsContainer.style.display = 'none';
-              toggleIndicator.textContent = ' + ';
+              toggleIndicator.textContent = 'Ver [+]';
             }
           });
-          return { container, clientsContainer };
+          return { container, clientsContainer, countSpan };
         };
 
         const installed = createCategoryContainer("Clientes instalados");
@@ -413,6 +428,7 @@
             copyButton.textContent = 'Copiar';
             copyButton.addEventListener('click', () => {
               let textToCopy = clientDiv.textContent.replace('Copiar','').trim();
+              textToCopy = textToCopy.split('\n').map(line => line.trim()).join('\n');
               navigator.clipboard.writeText(textToCopy)
                 .then(() => {
                   copyButton.textContent = 'Copiado!';
@@ -427,19 +443,25 @@
             });
             clientDiv.appendChild(copyButton);
             
-            // Agregar el bloque al contenedor correspondiente según la categoría
+            // Agregar el bloque al contenedor correspondiente según la categoría y actualizar el contador
             if (category === "installed") {
               installed.clientsContainer.appendChild(clientDiv);
+              updateCount(installed);
             } else if (category === "programmed") {
               programmed.clientsContainer.appendChild(clientDiv);
+              updateCount(programmed);
             } else if (category === "reviewed") {
               reviewed.clientsContainer.appendChild(clientDiv);
+              updateCount(reviewed);
             } else if (category === "notInstalled") {
               notInstalled.clientsContainer.appendChild(clientDiv);
+              updateCount(notInstalled);
             } else if (category === "inProgress") {
               inProgress.clientsContainer.appendChild(clientDiv);
+              updateCount(inProgress);
             } else if (category === "desaprobados") {
               desaprobados.clientsContainer.appendChild(clientDiv);
+              updateCount(desaprobados);
             }
           } catch(err) {
             console.error(`Error procesando la fila ${i}: ${err}`);
