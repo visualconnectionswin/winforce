@@ -4,15 +4,21 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Procesador de archivos de clientes</title>
+  <!-- Fuente Poppins -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
   <style>
+    :root {
+      /* Variable para controlar el número de clientes por línea */
+      --clients-per-line: 2;
+    }
     body {
-      font-family: Arial, sans-serif;
+      font-family: 'Poppins', sans-serif;
       margin: 20px;
     }
     #drop-area {
       border: 2px dashed #ccc;
       border-radius: 20px;
-      padding: 10px;
+      padding: 20px;
       text-align: center;
       margin-bottom: 20px;
       transition: border-color 0.3s;
@@ -20,17 +26,44 @@
     #drop-area.highlight {
       border-color: purple;
     }
+    .clients-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
     .client-block {
       border: 1px solid #ccc;
       border-radius: 10px;
       padding: 10px;
-      margin-bottom: 10px;
-      /* Color inicial verde para cada cliente */
       background-color: #aef39b;
+      box-sizing: border-box;
+      /* Se calcula el ancho según el número de clientes por línea */
+      flex: 0 0 calc(100% / var(--clients-per-line) - 10px);
+      transition: background-color 0.3s, transform 0.3s;
+    }
+    /* Reducir el espacio entre párrafos en el bloque del cliente */
+    .client-block p {
+      margin: 2px 0;
+    }
+    .client-block:hover {
+      transform: scale(1.02);
     }
     button {
       margin-top: 10px;
       padding: 5px 10px;
+      border: none;
+      border-radius: 5px;
+      background-color: #6c63ff;
+      color: #fff;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+    button:hover {
+      background-color: #5750d4;
+    }
+    h2 {
+      border-bottom: 2px solid #ccc;
+      padding-bottom: 5px;
     }
     pre {
       white-space: pre-wrap;
@@ -52,6 +85,10 @@
 
   <script>
     document.addEventListener('DOMContentLoaded', () => {
+      // Variable para modificar el número de clientes por línea (1, 2, 3, etc.)
+      const clientsPerLine = 4;
+      document.documentElement.style.setProperty('--clients-per-line', clientsPerLine);
+
       const dropArea = document.getElementById('drop-area');
       const fileInput = document.getElementById('file-input');
       const resultsContainer = document.getElementById('results');
@@ -122,22 +159,17 @@
           
           // Extraer los datos manteniendo el formato original de las celdas
           const rawData = [];
-          
-          // Obtener rango de celdas
           const range = XLSX.utils.decode_range(worksheet['!ref']);
-          
           for (let r = range.s.r; r <= range.e.r; r++) {
             const row = [];
             for (let c = range.s.c; c <= range.e.c; c++) {
               const cellRef = XLSX.utils.encode_cell({r: r, c: c});
               const cell = worksheet[cellRef];
-              
               if (!cell) {
                 row.push('');
                 continue;
               }
-              
-              // Usar directamente el valor formateado (w) para números (preserva ceros a la izquierda)
+              // Preserva los ceros a la izquierda usando el valor formateado (w) cuando sea posible
               if (cell.t === 'n' && cell.w) {
                 row.push(cell.w);
               } else {
@@ -146,7 +178,6 @@
             }
             rawData.push(row);
           }
-          
           processData(rawData);
         };
         reader.onerror = function(err) {
@@ -189,32 +220,54 @@
       // - Se omite la fila 1 (encabezados)
       // - Clientes instalados: estado de orden (col AB, índice 27) es "Ejecutada"
       // - Clientes programados: estado de pedido (col Y, índice 24) es "Validado" y estado de orden (col AB) es "Programada",
-      //   y además, de acuerdo a la fecha (col AK, índice 36) y hora (col AL, índice 37), la franja de 4 horas aún no venció.
+      //   y además, según la fecha (col AK, índice 36) y hora (col AL, índice 37), la franja de 4 horas aún no venció.
       // - Clientes revisados: cuando el estado de pedido (col Y) es "revisado"
       // - Clientes no instalados: cuando se cumplen los criterios de validado y programada, pero la fecha/hora ya pasó.
       // - Clientes en progreso: cuando el estado de pedido (col Y) es "En progreso"
       // - Clientes desaprobados: el resto, mostrando la diferencia entre el valor de la columna AB (índice 27) y la columna AC (índice 28)
       function processData(rows) {
         const now = new Date();
-        // Crear contenedores para cada sección
-        const installedContainer = document.createElement('div');
-        installedContainer.innerHTML = "<h2>Clientes instalados</h2>";
-        const programmedContainer = document.createElement('div');
-        programmedContainer.innerHTML = "<h2>Clientes programados</h2>";
-        const reviewedContainer = document.createElement('div');
-        reviewedContainer.innerHTML = "<h2>Clientes revisados</h2>";
-        const notInstalledContainer = document.createElement('div');
-        notInstalledContainer.innerHTML = "<h2>Clientes no instalados</h2>";
-        const inProgressContainer = document.createElement('div');
-        inProgressContainer.innerHTML = "<h2>Clientes en progreso</h2>";
-        const desaprobadosContainer = document.createElement('div');
-        desaprobadosContainer.innerHTML = "<h2>Clientes desaprobados</h2>";
+        // Función para crear cada contenedor de categoría con su título y contenedor flex para los clientes
+        const createCategoryContainer = (title) => {
+          const container = document.createElement('div');
+          const header = document.createElement('h2');
+          header.style.cursor = 'pointer';
+          // Creamos un span para el indicador de expandir/contraer
+          const toggleIndicator = document.createElement('span');
+          toggleIndicator.textContent = ' - '; // Estado inicial: expandido
+          header.textContent = title;
+          header.appendChild(toggleIndicator);
+          const clientsContainer = document.createElement('div');
+          clientsContainer.classList.add('clients-container');
+          clientsContainer.style.display = 'flex'; // Estado inicial visible
+          container.appendChild(header);
+          container.appendChild(clientsContainer);
+          // Al hacer clic en el título se alterna la visibilidad de los clientes y se actualiza el indicador
+          header.addEventListener('click', () => {
+            if(clientsContainer.style.display === 'none'){
+              clientsContainer.style.display = 'flex';
+              toggleIndicator.textContent = ' - ';
+            } else {
+              clientsContainer.style.display = 'none';
+              toggleIndicator.textContent = ' + ';
+            }
+          });
+          return { container, clientsContainer };
+        };
+
+        const installed = createCategoryContainer("Clientes instalados");
+        const programmed = createCategoryContainer("Clientes programados");
+        const reviewed = createCategoryContainer("Clientes revisados");
+        const notInstalled = createCategoryContainer("Clientes no instalados");
+        const inProgress = createCategoryContainer("Clientes en progreso");
+        const desaprobados = createCategoryContainer("Clientes desaprobados");
 
         // Se omite la primera fila (encabezados)
         for (let i = 1; i < rows.length; i++) {
           let row = rows[i];
           try {
             // Columnas relevantes:
+            // Tipo Documento: columna F (índice 5)
             // Nombre: columna H (índice 7)
             // DNI: columna G (índice 6)
             // Estado de pedido: columna Y (índice 24)
@@ -224,6 +277,21 @@
             // Para desaprobados, se usa columna AC (índice 28)
             let nombre = row[7] || '';
             let dni = row[6] || '';
+            // Validación y completado de ceros según Tipo Documento (columna F, índice 5)
+            let tipoDoc = row[5] || '';
+            tipoDoc = tipoDoc.trim().toLowerCase();
+            let expectedLength = 0;
+            if (tipoDoc === "dni") {
+              expectedLength = 8;
+            } else if (tipoDoc === "carnet de extranjeria") {
+              expectedLength = 9;
+            } else if (tipoDoc === "ruc") {
+              expectedLength = 11;
+            }
+            dni = dni.toString();
+            if (expectedLength > 0 && dni.length < expectedLength) {
+              dni = dni.padStart(expectedLength, '0');
+            }
             let statePedido = (row[24] || "").trim().toLowerCase();
             let estadoOrden = (row[27] || "").trim().toLowerCase();
             let category = "";
@@ -359,30 +427,30 @@
             });
             clientDiv.appendChild(copyButton);
             
-            // Agregar el bloque al contenedor correspondiente
+            // Agregar el bloque al contenedor correspondiente según la categoría
             if (category === "installed") {
-              installedContainer.appendChild(clientDiv);
+              installed.clientsContainer.appendChild(clientDiv);
             } else if (category === "programmed") {
-              programmedContainer.appendChild(clientDiv);
+              programmed.clientsContainer.appendChild(clientDiv);
             } else if (category === "reviewed") {
-              reviewedContainer.appendChild(clientDiv);
+              reviewed.clientsContainer.appendChild(clientDiv);
             } else if (category === "notInstalled") {
-              notInstalledContainer.appendChild(clientDiv);
+              notInstalled.clientsContainer.appendChild(clientDiv);
             } else if (category === "inProgress") {
-              inProgressContainer.appendChild(clientDiv);
+              inProgress.clientsContainer.appendChild(clientDiv);
             } else if (category === "desaprobados") {
-              desaprobadosContainer.appendChild(clientDiv);
+              desaprobados.clientsContainer.appendChild(clientDiv);
             }
           } catch(err) {
             console.error(`Error procesando la fila ${i}: ${err}`);
           }
         }
-        resultsContainer.appendChild(installedContainer);
-        resultsContainer.appendChild(programmedContainer);
-        resultsContainer.appendChild(reviewedContainer);
-        resultsContainer.appendChild(notInstalledContainer);
-        resultsContainer.appendChild(inProgressContainer);
-        resultsContainer.appendChild(desaprobadosContainer);
+        resultsContainer.appendChild(installed.container);
+        resultsContainer.appendChild(programmed.container);
+        resultsContainer.appendChild(reviewed.container);
+        resultsContainer.appendChild(notInstalled.container);
+        resultsContainer.appendChild(inProgress.container);
+        resultsContainer.appendChild(desaprobados.container);
       }
     });
   </script>
