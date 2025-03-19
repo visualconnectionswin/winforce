@@ -1,12 +1,13 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Procesador de archivos de clientes</title>
-  <!-- Fuente Poppins -->
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
-  <style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Procesador de archivos de clientes - CRM</title>
+<!-- Fuente Poppins -->
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" integrity="sha512-9usAa10IRO0HhonpyAIVpjrylPvoDwiPUiKdWk5t3PyolY1cOd4DSE0Ga+ri4AuTroPR5aQvXU9xC6qOPnzFeg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+<style>
     :root {
       /* Variable para controlar el número de clientes por línea */
       --clients-per-line: 2;
@@ -25,6 +26,23 @@
     }
     #drop-area.highlight {
       border-color: purple;
+    }
+    #search-container {
+      margin-bottom: 10px;
+      text-align: right;
+    }
+    #search-input {
+      padding: 8px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+    }
+    .category-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .category-icon {
+      font-size: 1.2em; /* Adjust icon size as needed */
     }
     .clients-container {
       display: flex;
@@ -68,6 +86,31 @@
     .client-buttons button:last-child { /* Style for the 'Derivado' button (last button) */
       margin-left: auto; /* Push 'Derivado' button to the right */
     }
+    .client-notes-container {
+      margin-top: 10px;
+    }
+    .client-notes {
+      border: 1px solid #ddd;
+      padding: 5px;
+      border-radius: 5px;
+      min-height: 30px;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+      overflow-y: auto; /* Add scroll if notes are too long */
+      max-height: 100px; /* Limit max height to avoid very large blocks */
+    }
+    .client-notes:focus {
+      outline: none;
+      border-color: #6c63ff;
+      box-shadow: 0 0 5px rgba(108, 99, 255, 0.5);
+    }
+    .client-notes .note-timestamp {
+      font-size: 0.7em; /* Tamaño de letra pequeña para la fecha */
+      color: #777; /* Color grisáceo para la fecha */
+      display: block; /* Para que la fecha ocupe una línea separada */
+      text-align: right; /* Alinear la fecha a la derecha */
+    }
+
 
     button { /* General button style */
       padding: 5px 10px;
@@ -84,6 +127,7 @@
     h2 {
       border-bottom: 2px solid #ccc;
       padding-bottom: 5px;
+      margin-top: 20px;
     }
     pre {
       white-space: pre-wrap;
@@ -94,13 +138,18 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </head>
 <body>
-  <h1>Procesador de archivos de clientes</h1>
+  <h1>Procesador de archivos de clientes - CRM</h1>
   <p>Arrastra y suelta un archivo o haz clic en el botón para seleccionar uno desde tu dispositivo.</p>
   <div id="drop-area">
     <p>Arrastra y suelta el archivo aquí</p>
     <p>o</p>
     <input type="file" id="file-input" accept=".xls,.xlsx,.html,.htm">
   </div>
+
+  <div id="search-container">
+    <input type="text" id="search-input" placeholder="Buscar por Nombre o DNI">
+  </div>
+
   <div id="results"></div>
 
   <script>
@@ -112,6 +161,27 @@
       const dropArea = document.getElementById('drop-area');
       const fileInput = document.getElementById('file-input');
       const resultsContainer = document.getElementById('results');
+      const searchInput = document.getElementById('search-input');
+
+      let currentRows = []; // Store the current processed rows to allow filtering
+
+      // Function to apply search filter
+      function applySearchFilter() {
+        const searchTerm = searchInput.value.toLowerCase();
+        resultsContainer.querySelectorAll('.clients-container').forEach(container => {
+          container.childNodes.forEach(clientBlock => {
+            const blockText = clientBlock.textContent.toLowerCase();
+            if (blockText.includes(searchTerm)) {
+              clientBlock.style.display = ''; // Show if matches
+            } else {
+              clientBlock.style.display = 'none'; // Hide if not matches
+            }
+          });
+        });
+      }
+
+      searchInput.addEventListener('input', applySearchFilter);
+
 
       // Función para obtener la lista de DNIs derivados desde localStorage
       function getDerivedDnis() {
@@ -133,6 +203,31 @@
         return getDerivedDnis().includes(dni);
       }
 
+      // Function to get notes from localStorage
+      function getNotesForDni(dni) {
+        let notes = localStorage.getItem(`notes-${dni}`);
+        let timestamp = localStorage.getItem(`timestamp-${dni}`);
+        if (notes && notes.trim() !== "") {
+          return notes + (timestamp ? `<span class="note-timestamp">(${timestamp})</span>` : '');
+        } else {
+          return ''; // Return empty string if notes are empty
+        }
+      }
+
+
+      // Function to save notes to localStorage
+      function saveNotesForDni(dni, notes) {
+        if (notes && notes.trim() !== "") {
+          const now = new Date();
+          const timestamp = now.toLocaleDateString() + ' ' + now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
+          localStorage.setItem(`notes-${dni}`, notes);
+          localStorage.setItem(`timestamp-${dni}`, timestamp);
+        } else {
+          localStorage.setItem(`notes-${dni}`, ''); // Save empty notes
+          localStorage.removeItem(`timestamp-${dni}`); // Remove timestamp if notes are empty
+        }
+      }
+
 
       // Previene comportamientos por defecto (evita que el navegador abra el archivo)
       ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
@@ -142,7 +237,7 @@
       function preventDefaults(e) {
         e.preventDefault();
         e.stopPropagation();
-        }
+      }
 
       // Resalta el área al arrastrar el archivo
       ['dragenter', 'dragover'].forEach(eventName => {
@@ -258,26 +353,23 @@
       }
 
       // Procesa los datos leídos y los clasifica en secciones según los criterios:
-      // - Se omite la fila 1 (encabezados)
-      // - Clientes instalados: estado de orden (col AB, índice 27) es "Ejecutada"
-      // - Clientes programados: estado de pedido (col Y, índice 24) es "Validado" y estado de orden (col AB) es "Programada",
-      //   y además, según la fecha (col AK, índice 36) y hora (col AL, índice 37), la franja de 4 horas aún no venció.
-      // - Clientes revisados: cuando el estado de pedido (col Y) es "revisado"
-      // - Clientes no instalados: cuando se cumplen los criterios de validado y programada, pero la fecha/hora ya pasó.
-      // - Clientes en progreso: cuando el estado de pedido (col Y) es "En progreso"
-      // - Clientes desaprobados: el resto, mostrando la diferencia entre el valor de la columna AB (índice 27) y la columna AC (índice 28)
       function processData(rows) {
+        currentRows = rows; // Store rows for filtering
         const now = new Date();
         // Función para actualizar el contador de clientes en cada sección
         function updateCount(categoryContainer) {
           categoryContainer.countSpan.textContent = " (" + categoryContainer.clientsContainer.childElementCount + ")";
         }
         // Función para crear cada contenedor de categoría con su título, contador y contenedor flex para los clientes
-        const createCategoryContainer = (title) => {
+        const createCategoryContainer = (title, iconClass) => {
           const container = document.createElement('div');
           const header = document.createElement('h2');
           header.style.cursor = 'pointer';
-          // Crear span para el título, contador y el indicador de expandir/contraer
+          const categoryHeader = document.createElement('div');
+          categoryHeader.classList.add('category-header');
+          const iconSpan = document.createElement('span');
+          iconSpan.className = `category-icon ${iconClass}`;
+          iconSpan.setAttribute('aria-hidden', 'true'); // for accessibility
           const titleSpan = document.createElement('span');
           titleSpan.textContent = title;
           const countSpan = document.createElement('span');
@@ -287,18 +379,20 @@
           const toggleIndicator = document.createElement('span');
           toggleIndicator.style.fontSize = "0.8em";
           toggleIndicator.style.marginLeft = "10px";
-          // Estado inicial: expandido
           toggleIndicator.textContent = "Ocultar [-]";
-          // Agregar los spans al header
-          header.appendChild(titleSpan);
-          header.appendChild(countSpan);
-          header.appendChild(toggleIndicator);
+
+          categoryHeader.appendChild(iconSpan);
+          categoryHeader.appendChild(titleSpan);
+          categoryHeader.appendChild(countSpan);
+          categoryHeader.appendChild(toggleIndicator);
+          header.appendChild(categoryHeader);
+
+
           const clientsContainer = document.createElement('div');
           clientsContainer.classList.add('clients-container');
-          clientsContainer.style.display = 'flex'; // Estado inicial visible
+          clientsContainer.style.display = 'flex';
           container.appendChild(header);
           container.appendChild(clientsContainer);
-          // Al hacer clic en el título se alterna la visibilidad de los clientes y se actualiza el indicador
           header.addEventListener('click', () => {
             if(clientsContainer.style.display === 'none'){
               clientsContainer.style.display = 'flex';
@@ -311,12 +405,15 @@
           return { container, clientsContainer, countSpan };
         };
 
-        const installed = createCategoryContainer("Clientes instalados");
-        const programmed = createCategoryContainer("Clientes programados");
-        const reviewed = createCategoryContainer("Clientes revisados");
-        const notInstalled = createCategoryContainer("Clientes no instalados");
-        const inProgress = createCategoryContainer("Clientes en progreso");
-        const desaprobados = createCategoryContainer("Clientes desaprobados");
+        const installed = createCategoryContainer("Clientes instalados", "fas fa-check-circle");
+        const programmed = createCategoryContainer("Clientes programados", "fas fa-calendar-check");
+        const reviewed = createCategoryContainer("Clientes revisados", "fas fa-search");
+        const notInstalled = createCategoryContainer("Clientes no instalados", "fas fa-times-circle");
+        const inProgress = createCategoryContainer("Clientes en progreso", "fas fa-spinner fa-spin");
+        const desaprobados = createCategoryContainer("Clientes desaprobados", "fas fa-ban");
+
+        const clientsData = []; // Array to hold processed client data for sorting
+
 
         // Se omite la primera fila (encabezados)
         for (let i = 1; i < rows.length; i++) {
@@ -337,12 +434,16 @@
             let tipoDoc = row[5] || '';
             tipoDoc = tipoDoc.trim().toLowerCase();
             let expectedLength = 0;
+            let docLabel = "DNI"; // Default label
             if (tipoDoc === "dni") {
               expectedLength = 8;
+              docLabel = "DNI";
             } else if (tipoDoc === "carnet de extranjeria") {
               expectedLength = 9;
+              docLabel = "C.E.";
             } else if (tipoDoc === "ruc") {
               expectedLength = 11;
+              docLabel = "RUC";
             }
             dni = dni.toString();
             if (expectedLength > 0 && dni.length < expectedLength) {
@@ -390,16 +491,37 @@
               category = "desaprobados";
             }
 
+            clientsData.push({ rowData: row, category: category, nombre: nombre, dni: dni, docLabel: docLabel });
+
+
+          } catch(err) {
+            console.error(`Error procesando la fila ${i}: ${err}`);
+          }
+        }
+
+        // Sort clientsData array alphabetically by name
+        clientsData.sort((a, b) => a.nombre.localeCompare(b.nombre));
+
+
+        clientsData.forEach(clientInfo => {
+            const row = clientInfo.rowData;
+            const category = clientInfo.category;
+            const nombre = clientInfo.nombre;
+            const dni = clientInfo.dni;
+            const docLabel = clientInfo.docLabel;
+
+
             // Crear el bloque del cliente
             const clientDiv = document.createElement('div');
             clientDiv.classList.add('client-block');
+
             let contentHTML = "";
-            if (category === "installed") {
-              contentHTML = `
+            contentHTML = `
                 <p>Nombre: ${nombre}</p>
-                <p>DNI: <span class="dni" style="cursor: pointer; text-decoration: underline;">${dni}</span></p>
-                <p>Instalada!</p>
-              `;
+                <p>${docLabel}: <span class="dni" style="cursor: pointer; text-decoration: underline;">${dni}</span></p>
+            `;
+            if (category === "installed") {
+              contentHTML += `<p>Instalada!</p>`;
             } else if (category === "programmed") {
               let scheduledTime = row[37] || "";
               let tramo = "";
@@ -412,15 +534,9 @@
               } else {
                 tramo = scheduledTime;
               }
-              contentHTML = `
-                <p>Nombre: ${nombre}</p>
-                <p>DNI: <span class="dni" style="cursor: pointer; text-decoration: underline;">${dni}</span></p>
-                <p>Programado para: ${row[36]} de ${tramo}</p>
-              `;
+              contentHTML += `<p>Programado para: ${row[36]} de ${tramo}</p>`;
             } else if (category === "reviewed") {
-              contentHTML = `
-                <p>Nombre: ${nombre}</p>
-                <p>DNI/RUC: <span class="dni" style="cursor: pointer; text-decoration: underline;">${dni}</span></p>
+              contentHTML += `
                 <p>Número de contacto: ${row[9] || ''}</p>
                 <p>Distrito: ${row[13] || ''}</p>
                 <p>Llamar a programar por favor</p>
@@ -437,27 +553,24 @@
               } else {
                 tramo = scheduledTime;
               }
-              contentHTML = `
-                <p>Nombre: ${nombre}</p>
-                <p>DNI: <span class="dni" style="cursor: pointer; text-decoration: underline;">${dni}</span></p>
+              contentHTML += `
                 <p>Celular: ${row[9] || ''}</p>
                 <p>Distrito: ${row[13] || ''}</p>
         <p>Programado para: ${row[36]} de ${tramo}</p>
                 <p>Me puede facilitar información del status de este cliente por favor</p>
               `;
             } else if (category === "inProgress") {
-              contentHTML = `
-                <p>Nombre: ${nombre}</p>
-                <p>DNI: <span class="dni" style="cursor: pointer; text-decoration: underline;">${dni}</span></p>
-                <p>En progreso</p>
-              `;
+              contentHTML += `<p>En progreso</p>`;
             } else if (category === "desaprobados") {
-              contentHTML = `
-                <p>Nombre: ${nombre}</p>
-                <p>DNI: <span class="dni" style="cursor: pointer; text-decoration: underline;">${dni}</span></p>
-                <p>${row[24] || ''} - ${row[25] || ''}</p>
-              `;
+              contentHTML += `<p>${row[24] || ''} - ${row[25] || ''}</p>`;
             }
+
+            contentHTML += `<div class="client-notes-container">
+                              <p style="margin-bottom: 5px;">Notas:</p>
+                              <div class="client-notes" contenteditable="true">${getNotesForDni(dni)}</div>
+                            </div>`;
+
+
             clientDiv.innerHTML = contentHTML;
 
             // Funcionalidad para copiar solo el DNI al hacer clic
@@ -472,7 +585,7 @@
                   }, 1000);
                 })
                 .catch(err => {
-                  alert("Error al copiar el DNI/RUC.");
+                  alert("Error al copiar el ${docLabel}.");
                 });
             });
 
@@ -483,8 +596,9 @@
             // Botón para copiar la información completa del cliente
             const copyButton = document.createElement('button');
             copyButton.textContent = 'Copiar';
+            buttonsContainer.appendChild(copyButton);
             copyButton.addEventListener('click', () => {
-              let textToCopy = clientDiv.textContent.replace('Copiar','').replace('Derivado','').trim(); // remove both button texts
+              let textToCopy = clientDiv.textContent.replace('Copiar','').replace('Derivado','').replace('Derivado ✓','').trim(); // remove both button texts
               textToCopy = textToCopy.split('\n').map(line => line.trim()).join('\n');
               navigator.clipboard.writeText(textToCopy)
                 .then(() => {
@@ -492,13 +606,13 @@
                   clientDiv.style.backgroundColor = "#e4e9de";
                   setTimeout(() => {
                     copyButton.textContent = 'Copiar';
+                    clientDiv.style.backgroundColor = ''; // Reset color
                   }, 2000);
                 })
                 .catch(err => {
                   alert("Error al copiar el texto.");
                 });
             });
-            buttonsContainer.appendChild(copyButton);
 
 
             if (category === "installed") {
@@ -508,15 +622,23 @@
               }
               // Botón "Derivado" solo para clientes instalados
               const derivarButton = document.createElement('button');
-              derivarButton.textContent = 'Derivado';
+              derivarButton.textContent = isDniDerived(dni) ? 'Derivado ✓' : 'Derivado'; // Initial text based on status
+              derivarButton.disabled = isDniDerived(dni); // Disable if already derived
+              buttonsContainer.appendChild(derivarButton);
+
               derivarButton.addEventListener('click', () => {
                 saveDerivedDni(dni);
-                clientDiv.classList.add('derivado'); // Marca visualmente como derivado
-                derivarButton.disabled = true; // Deshabilitar el botón una vez derivado
+                clientDiv.classList.add('derivado');
+                derivarButton.textContent = 'Derivado ✓'; // Confirmation text
+                derivarButton.disabled = true;
               });
-              buttonsContainer.appendChild(derivarButton);
             }
             clientDiv.appendChild(buttonsContainer);
+
+            const notesDiv = clientDiv.querySelector('.client-notes');
+            notesDiv.addEventListener('input', (event) => { // Changed to 'input' event
+              saveNotesForDni(dni, event.target.textContent);
+            });
 
 
             // Agregar el bloque al contenedor correspondiente según la categoría y actualizar el contador
@@ -539,16 +661,17 @@
               desaprobados.clientsContainer.appendChild(clientDiv);
               updateCount(desaprobados);
             }
-          } catch(err) {
-            console.error(`Error procesando la fila ${i}: ${err}`);
-          }
-        }
+        });
+
+
         resultsContainer.appendChild(installed.container);
         resultsContainer.appendChild(programmed.container);
         resultsContainer.appendChild(reviewed.container);
         resultsContainer.appendChild(notInstalled.container);
         resultsContainer.appendChild(inProgress.container);
         resultsContainer.appendChild(desaprobados.container);
+
+        applySearchFilter(); // Apply initial filter if there is a search term on load
       }
     });
   </script>
