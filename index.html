@@ -40,6 +40,14 @@
       /* Se calcula el ancho según el número de clientes por línea */
       flex: 0 0 calc(100% / var(--clients-per-line) - 10px);
       transition: background-color 0.3s, transform 0.3s;
+
+      display: flex; /* Enable flexbox for client-block */
+      flex-direction: column; /* Stack content vertically */
+      justify-content: space-between; /* Distribute space between content and button area */
+    }
+    /* Estilo para clientes derivados */
+    .client-block.derivado {
+      background-color: #ffe0b2; /* Un color más suave para indicar derivado */
     }
     /* Reducir el espacio entre párrafos en el bloque del cliente */
     .client-block p {
@@ -48,8 +56,20 @@
     .client-block:hover {
       transform: scale(1.02);
     }
-    button {
-      margin-top: 10px;
+    .client-buttons {
+      display: flex; /* Flex container for buttons */
+      justify-content: space-between; /* Space out buttons */
+      align-items: center; /* Vertically align items in the button container */
+      margin-top: 10px; /* Add some space above the buttons */
+    }
+    .client-buttons button {
+      margin-top: 0; /* Reset margin for buttons inside .client-buttons */
+    }
+    .client-buttons button:last-child { /* Style for the 'Derivado' button (last button) */
+      margin-left: auto; /* Push 'Derivado' button to the right */
+    }
+
+    button { /* General button style */
       padding: 5px 10px;
       border: none;
       border-radius: 5px;
@@ -93,6 +113,27 @@
       const fileInput = document.getElementById('file-input');
       const resultsContainer = document.getElementById('results');
 
+      // Función para obtener la lista de DNIs derivados desde localStorage
+      function getDerivedDnis() {
+        const derivedDnisStr = localStorage.getItem('derivedDnis');
+        return derivedDnisStr ? JSON.parse(derivedDnisStr) : [];
+      }
+
+      // Función para guardar un DNI como derivado en localStorage
+      function saveDerivedDni(dni) {
+        let derivedDnis = getDerivedDnis();
+        if (!derivedDnis.includes(dni)) {
+          derivedDnis.push(dni);
+          localStorage.setItem('derivedDnis', JSON.stringify(derivedDnis));
+        }
+      }
+
+      // Función para verificar si un DNI ya está marcado como derivado
+      function isDniDerived(dni) {
+        return getDerivedDnis().includes(dni);
+      }
+
+
       // Previene comportamientos por defecto (evita que el navegador abra el archivo)
       ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
         dropArea.addEventListener(eventName, preventDefaults, false);
@@ -101,7 +142,7 @@
       function preventDefaults(e) {
         e.preventDefault();
         e.stopPropagation();
-      }
+        }
 
       // Resalta el área al arrastrar el archivo
       ['dragenter', 'dragover'].forEach(eventName => {
@@ -150,13 +191,13 @@
         const reader = new FileReader();
         reader.onload = function(e) {
           let data = e.target.result;
-          let workbook = XLSX.read(data, { 
+          let workbook = XLSX.read(data, {
             type: 'binary',
             cellText: true
           });
           let firstSheetName = workbook.SheetNames[0];
           let worksheet = workbook.Sheets[firstSheetName];
-          
+
           // Extraer los datos manteniendo el formato original de las celdas
           const rawData = [];
           const range = XLSX.utils.decode_range(worksheet['!ref']);
@@ -310,7 +351,7 @@
             let statePedido = (row[24] || "").trim().toLowerCase();
             let estadoOrden = (row[27] || "").trim().toLowerCase();
             let category = "";
-            
+
             if (estadoOrden === "ejecutada") {
               category = "installed";
             } else if (statePedido === "validado" && estadoOrden === "programada" && row[36] && row[36].trim() !== "" && row[37] && row[37].trim() !== "") {
@@ -348,7 +389,7 @@
             } else {
               category = "desaprobados";
             }
-            
+
             // Crear el bloque del cliente
             const clientDiv = document.createElement('div');
             clientDiv.classList.add('client-block');
@@ -385,7 +426,7 @@
                 <p>Llamar a programar por favor</p>
               `;
             } else if (category === "notInstalled") {
-				let scheduledTime = row[37] || "";
+              let scheduledTime = row[37] || "";
               let tramo = "";
               if (scheduledTime.startsWith("08")) {
                 tramo = "8 a 12";
@@ -401,7 +442,7 @@
                 <p>DNI: <span class="dni" style="cursor: pointer; text-decoration: underline;">${dni}</span></p>
                 <p>Celular: ${row[9] || ''}</p>
                 <p>Distrito: ${row[13] || ''}</p>
-				<p>Programado para: ${row[36]} de ${tramo}</p>
+        <p>Programado para: ${row[36]} de ${tramo}</p>
                 <p>Me puede facilitar información del status de este cliente por favor</p>
               `;
             } else if (category === "inProgress") {
@@ -418,7 +459,7 @@
               `;
             }
             clientDiv.innerHTML = contentHTML;
-            
+
             // Funcionalidad para copiar solo el DNI al hacer clic
             const dniSpan = clientDiv.querySelector('.dni');
             dniSpan.addEventListener('click', () => {
@@ -434,12 +475,16 @@
                   alert("Error al copiar el DNI/RUC.");
                 });
             });
-            
-            // Botón para copiar la información completa del cliente y cambiar el color del bloque
+
+            // Container for buttons
+            const buttonsContainer = document.createElement('div');
+            buttonsContainer.classList.add('client-buttons');
+
+            // Botón para copiar la información completa del cliente
             const copyButton = document.createElement('button');
             copyButton.textContent = 'Copiar';
             copyButton.addEventListener('click', () => {
-              let textToCopy = clientDiv.textContent.replace('Copiar','').trim();
+              let textToCopy = clientDiv.textContent.replace('Copiar','').replace('Derivado','').trim(); // remove both button texts
               textToCopy = textToCopy.split('\n').map(line => line.trim()).join('\n');
               navigator.clipboard.writeText(textToCopy)
                 .then(() => {
@@ -453,8 +498,27 @@
                   alert("Error al copiar el texto.");
                 });
             });
-            clientDiv.appendChild(copyButton);
-            
+            buttonsContainer.appendChild(copyButton);
+
+
+            if (category === "installed") {
+              // Verificar si el DNI ya está derivado y marcar visualmente
+              if (isDniDerived(dni)) {
+                clientDiv.classList.add('derivado');
+              }
+              // Botón "Derivado" solo para clientes instalados
+              const derivarButton = document.createElement('button');
+              derivarButton.textContent = 'Derivado';
+              derivarButton.addEventListener('click', () => {
+                saveDerivedDni(dni);
+                clientDiv.classList.add('derivado'); // Marca visualmente como derivado
+                derivarButton.disabled = true; // Deshabilitar el botón una vez derivado
+              });
+              buttonsContainer.appendChild(derivarButton);
+            }
+            clientDiv.appendChild(buttonsContainer);
+
+
             // Agregar el bloque al contenedor correspondiente según la categoría y actualizar el contador
             if (category === "installed") {
               installed.clientsContainer.appendChild(clientDiv);
