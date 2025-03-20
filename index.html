@@ -1,13 +1,13 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Procesador de archivos de clientes - CRM</title>
-<!-- Fuente Poppins -->
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" integrity="sha512-9usAa10IRO0HhonpyAIVpjrylPvoDwiPUiKdWk5t3PyolY1cOd4DSE0Ga+ri4AuTroPR5aQvXU9xC6qOPnzFeg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
-<style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Procesador de archivos de clientes - CRM</title>
+  <!-- Fuente Poppins -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" integrity="sha512-9usAa10IRO0HhonpyAIVpjrylPvoDwiPUiKdWk5t3PyolY1cOd4DSE0Ga+ri4AuTroPR5aQvXU9xC6qOPnzFeg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <style>
     :root {
       /* Variable para controlar el número de clientes por línea */
       --clients-per-line: 2;
@@ -42,7 +42,7 @@
       gap: 10px;
     }
     .category-icon {
-      font-size: 1.2em; /* Adjust icon size as needed */
+      font-size: 1.2em;
     }
     .clients-container {
       display: flex;
@@ -55,19 +55,16 @@
       padding: 10px;
       background-color: #aef39b;
       box-sizing: border-box;
-      /* Se calcula el ancho según el número de clientes por línea */
       flex: 0 0 calc(100% / var(--clients-per-line) - 10px);
-      transition: background-color 0.3s, transform 0.3s;
-
-      display: flex; /* Enable flexbox for client-block */
-      flex-direction: column; /* Stack content vertically */
-      justify-content: space-between; /* Distribute space between content and button area */
+      transition: background-color 0.3s, transform 0.3s, opacity 0.3s;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
     }
     /* Estilo para clientes derivados */
     .client-block.derivado {
-      background-color: #ffe0b2; /* Un color más suave para indicar derivado */
+      background-color: #ffe0b2;
     }
-    /* Reducir el espacio entre párrafos en el bloque del cliente */
     .client-block p {
       margin: 2px 0;
     }
@@ -75,20 +72,21 @@
       transform: scale(1.02);
     }
     .client-buttons {
-      display: flex; /* Flex container for buttons */
-      justify-content: space-between; /* Space out buttons */
-      align-items: center; /* Vertically align items in the button container */
-      margin-top: 10px; /* Add some space above the buttons */
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 10px;
     }
     .client-buttons button {
-      margin-top: 0; /* Reset margin for buttons inside .client-buttons */
+      margin-top: 0;
     }
-    .client-buttons button:last-child { /* Style for the 'Derivado' button (last button) */
-      margin-left: auto; /* Push 'Derivado' button to the right */
+    .client-buttons button:last-child {
+      margin-left: auto;
     }
     .client-notes-container {
       margin-top: 10px;
     }
+    /* Recuadro de notas en línea: se mantiene en su posición original */
     .client-notes {
       border: 1px solid #ddd;
       padding: 5px;
@@ -96,23 +94,20 @@
       min-height: 30px;
       white-space: pre-wrap;
       word-wrap: break-word;
-      overflow-y: auto; /* Add scroll if notes are too long */
-      max-height: 100px; /* Limit max height to avoid very large blocks */
+      overflow-y: auto;
+      max-height: 100px;
+      cursor: pointer;
+      position: relative;
     }
-    .client-notes:focus {
-      outline: none;
-      border-color: #6c63ff;
-      box-shadow: 0 0 5px rgba(108, 99, 255, 0.5);
+    /* La fecha se muestra siempre debajo del contenido de la nota */
+    .note-timestamp {
+      font-size: 0.7em;
+      color: #777;
+      display: block;
+      text-align: right;
+      margin-top: 5px;
     }
-    .client-notes .note-timestamp {
-      font-size: 0.7em; /* Tamaño de letra pequeña para la fecha */
-      color: #777; /* Color grisáceo para la fecha */
-      display: block; /* Para que la fecha ocupe una línea separada */
-      text-align: right; /* Alinear la fecha a la derecha */
-    }
-
-
-    button { /* General button style */
+    button {
       padding: 5px 10px;
       border: none;
       border-radius: 5px;
@@ -133,6 +128,40 @@
       white-space: pre-wrap;
       word-wrap: break-word;
     }
+    /* Estilos para el modal de edición de nota */
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      overflow: auto;
+      background-color: rgba(0,0,0,0.4);
+    }
+    .modal-content {
+      background-color: #fefefe;
+      margin: 10% auto;
+      padding: 20px;
+      border: 1px solid #888;
+      width: 80%;
+      max-width: 500px;
+      border-radius: 10px;
+      position: relative;
+    }
+    .close-button {
+      position: absolute;
+      right: 10px;
+      top: 5px;
+      font-size: 24px;
+      font-weight: bold;
+      color: #aaa;
+      cursor: pointer;
+    }
+    .close-button:hover {
+      color: #000;
+    }
   </style>
   <!-- Se incluye la librería XLSX para leer archivos Excel -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -152,9 +181,20 @@
 
   <div id="results"></div>
 
+  <!-- Modal para edición de nota -->
+  <div id="note-modal" class="modal">
+    <div class="modal-content">
+      <span class="close-button">&times;</span>
+      <h3>Editar Nota</h3>
+      <textarea id="note-modal-textarea" rows="5" style="width:100%;"></textarea>
+      <div id="note-modal-timestamp" style="font-size:0.8em; color:#777; margin-top:10px;"></div>
+      <button id="note-modal-save">Guardar</button>
+      <button id="note-modal-close">Cerrar</button>
+    </div>
+  </div>
+
   <script>
     document.addEventListener('DOMContentLoaded', () => {
-      // Variable para modificar el número de clientes por línea (1, 2, 3, etc.)
       const clientsPerLine = 6;
       document.documentElement.style.setProperty('--clients-per-line', clientsPerLine);
 
@@ -163,33 +203,23 @@
       const resultsContainer = document.getElementById('results');
       const searchInput = document.getElementById('search-input');
 
-      let currentRows = []; // Store the current processed rows to allow filtering
+      let currentRows = [];
 
-      // Function to apply search filter
       function applySearchFilter() {
         const searchTerm = searchInput.value.toLowerCase();
         resultsContainer.querySelectorAll('.clients-container').forEach(container => {
           container.childNodes.forEach(clientBlock => {
             const blockText = clientBlock.textContent.toLowerCase();
-            if (blockText.includes(searchTerm)) {
-              clientBlock.style.display = ''; // Show if matches
-            } else {
-              clientBlock.style.display = 'none'; // Hide if not matches
-            }
+            clientBlock.style.display = blockText.includes(searchTerm) ? '' : 'none';
           });
         });
       }
-
       searchInput.addEventListener('input', applySearchFilter);
 
-
-      // Función para obtener la lista de DNIs derivados desde localStorage
       function getDerivedDnis() {
         const derivedDnisStr = localStorage.getItem('derivedDnis');
         return derivedDnisStr ? JSON.parse(derivedDnisStr) : [];
       }
-
-      // Función para guardar un DNI como derivado en localStorage
       function saveDerivedDni(dni) {
         let derivedDnis = getDerivedDnis();
         if (!derivedDnis.includes(dni)) {
@@ -197,39 +227,46 @@
           localStorage.setItem('derivedDnis', JSON.stringify(derivedDnis));
         }
       }
-
-      // Función para verificar si un DNI ya está marcado como derivado
+      function removeDerivedDni(dni) {
+        let derivedDnis = getDerivedDnis();
+        let index = derivedDnis.indexOf(dni);
+        if (index > -1) {
+          derivedDnis.splice(index, 1);
+          localStorage.setItem('derivedDnis', JSON.stringify(derivedDnis));
+        }
+      }
       function isDniDerived(dni) {
         return getDerivedDnis().includes(dni);
       }
 
-      // Function to get notes from localStorage
-      function getNotesForDni(dni) {
-        let notes = localStorage.getItem(`notes-${dni}`);
-        let timestamp = localStorage.getItem(`timestamp-${dni}`);
-        if (notes && notes.trim() !== "") {
-          return notes + (timestamp ? `<span class="note-timestamp">(${timestamp})</span>` : '');
-        } else {
-          return ''; // Return empty string if notes are empty
-        }
+      // Funciones para manejar el estado "copiado" (persistido en localStorage)
+      function setCopiedState(dni, state) {
+        localStorage.setItem(`copied-${dni}`, state ? "true" : "false");
+      }
+      function isCopied(dni) {
+        return localStorage.getItem(`copied-${dni}`) === "true";
       }
 
-
-      // Function to save notes to localStorage
-      function saveNotesForDni(dni, notes) {
-        if (notes && notes.trim() !== "") {
+      // Obtiene la nota y su timestamp para un DNI
+      function getNoteDataForDni(dni) {
+        let note = localStorage.getItem(`notes-${dni}`) || '';
+        let timestamp = localStorage.getItem(`timestamp-${dni}`) || '';
+        return { note, timestamp };
+      }
+      // Guarda la nota y actualiza el timestamp
+      function saveNotesForDni(dni, note) {
+        if (note && note.trim() !== "") {
           const now = new Date();
           const timestamp = now.toLocaleDateString() + ' ' + now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
-          localStorage.setItem(`notes-${dni}`, notes);
+          localStorage.setItem(`notes-${dni}`, note);
           localStorage.setItem(`timestamp-${dni}`, timestamp);
         } else {
-          localStorage.setItem(`notes-${dni}`, ''); // Save empty notes
-          localStorage.removeItem(`timestamp-${dni}`); // Remove timestamp if notes are empty
+          localStorage.setItem(`notes-${dni}`, '');
+          localStorage.removeItem(`timestamp-${dni}`);
         }
       }
 
-
-      // Previene comportamientos por defecto (evita que el navegador abra el archivo)
+      // Previene comportamientos por defecto
       ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
         dropArea.addEventListener(eventName, preventDefaults, false);
         document.body.addEventListener(eventName, preventDefaults, false);
@@ -238,39 +275,26 @@
         e.preventDefault();
         e.stopPropagation();
       }
-
-      // Resalta el área al arrastrar el archivo
       ['dragenter', 'dragover'].forEach(eventName => {
-        dropArea.addEventListener(eventName, () => {
-          dropArea.classList.add('highlight');
-        }, false);
+        dropArea.addEventListener(eventName, () => dropArea.classList.add('highlight'), false);
       });
       ['dragleave', 'drop'].forEach(eventName => {
-        dropArea.addEventListener(eventName, () => {
-          dropArea.classList.remove('highlight');
-        }, false);
+        dropArea.addEventListener(eventName, () => dropArea.classList.remove('highlight'), false);
       });
-
-      // Maneja el evento de soltar el archivo
       dropArea.addEventListener('drop', handleDrop, false);
       function handleDrop(e) {
         let dt = e.dataTransfer;
         let files = dt.files;
         handleFiles(files);
       }
-
-      // Maneja la selección del archivo desde el input
       fileInput.addEventListener('change', (e) => {
         let files = e.target.files;
         handleFiles(files);
       });
-
       function handleFiles(files) {
         if (files.length === 0) return;
         const file = files[0];
-        // Limpia resultados anteriores
         resultsContainer.innerHTML = '';
-        // Verifica la extensión del archivo para determinar cómo leerlo
         const fileName = file.name.toLowerCase();
         if (fileName.endsWith('.xls') || fileName.endsWith('.xlsx')) {
           readExcel(file);
@@ -280,20 +304,13 @@
           alert('Formato de archivo no soportado.');
         }
       }
-
-      // Función para leer archivos Excel utilizando la librería XLSX
       function readExcel(file) {
         const reader = new FileReader();
         reader.onload = function(e) {
           let data = e.target.result;
-          let workbook = XLSX.read(data, {
-            type: 'binary',
-            cellText: true
-          });
+          let workbook = XLSX.read(data, { type: 'binary', cellText: true });
           let firstSheetName = workbook.SheetNames[0];
           let worksheet = workbook.Sheets[firstSheetName];
-
-          // Extraer los datos manteniendo el formato original de las celdas
           const rawData = [];
           const range = XLSX.utils.decode_range(worksheet['!ref']);
           for (let r = range.s.r; r <= range.e.r; r++) {
@@ -301,16 +318,9 @@
             for (let c = range.s.c; c <= range.e.c; c++) {
               const cellRef = XLSX.utils.encode_cell({r: r, c: c});
               const cell = worksheet[cellRef];
-              if (!cell) {
-                row.push('');
-                continue;
-              }
-              // Preserva los ceros a la izquierda usando el valor formateado (w) cuando sea posible
-              if (cell.t === 'n' && cell.w) {
-                row.push(cell.w);
-              } else {
-                row.push(cell.v);
-              }
+              if (!cell) { row.push(''); continue; }
+              if (cell.t === 'n' && cell.w) { row.push(cell.w); }
+              else { row.push(cell.v); }
             }
             rawData.push(row);
           }
@@ -321,8 +331,6 @@
         };
         reader.readAsBinaryString(file);
       }
-
-      // Función para leer archivos HTML y extraer la primera tabla
       function readHtml(file) {
         const reader = new FileReader();
         reader.onload = function(e) {
@@ -339,9 +347,7 @@
           trElements.forEach(tr => {
             let row = [];
             const cells = tr.querySelectorAll('th, td');
-            cells.forEach(cell => {
-              row.push(cell.textContent.trim());
-            });
+            cells.forEach(cell => row.push(cell.textContent.trim()));
             rows.push(row);
           });
           processData(rows);
@@ -351,16 +357,44 @@
         };
         reader.readAsText(file);
       }
+      
+      // Función que genera el texto a copiar para cada cliente
+      function getClientCopyText(clientInfo) {
+        let text = `Nombre: ${clientInfo.nombre}\n${clientInfo.docLabel}: ${clientInfo.dni}\n`;
+        if(clientInfo.category === "installed") {
+          text += "Instalada!";
+        } else if(clientInfo.category === "programmed") {
+          let scheduledTime = clientInfo.rowData[37] || "";
+          let tramo = "";
+          if(scheduledTime.startsWith("08")) tramo = "8 a 12";
+          else if(scheduledTime.startsWith("12")) tramo = "12 a 4";
+          else if(scheduledTime.startsWith("16") || scheduledTime.startsWith("4")) tramo = "4 a 8";
+          else tramo = scheduledTime;
+          text += `Programado para: ${clientInfo.rowData[36]} de ${tramo}`;
+        } else if(clientInfo.category === "reviewed") {
+          text += `Número de contacto: ${clientInfo.rowData[9] || ''}\nDistrito: ${clientInfo.rowData[13] || ''}\nLlamar a programar por favor`;
+        } else if(clientInfo.category === "notInstalled") {
+          let scheduledTime = clientInfo.rowData[37] || "";
+          let tramo = "";
+          if(scheduledTime.startsWith("08")) tramo = "8 a 12";
+          else if(scheduledTime.startsWith("12")) tramo = "12 a 4";
+          else if(scheduledTime.startsWith("16") || scheduledTime.startsWith("4")) tramo = "4 a 8";
+          else tramo = scheduledTime;
+          text += `Celular: ${clientInfo.rowData[9] || ''}\nDistrito: ${clientInfo.rowData[13] || ''}\nProgramado para: ${clientInfo.rowData[36]} de ${tramo}\nMe puede facilitar información del status de este cliente por favor`;
+        } else if(clientInfo.category === "inProgress") {
+          text += "En progreso";
+        } else if(clientInfo.category === "desaprobados") {
+          text += `${clientInfo.rowData[24] || ''} - ${clientInfo.rowData[25] || ''}`;
+        }
+        return text;
+      }
 
-      // Procesa los datos leídos y los clasifica en secciones según los criterios:
       function processData(rows) {
-        currentRows = rows; // Store rows for filtering
+        currentRows = rows;
         const now = new Date();
-        // Función para actualizar el contador de clientes en cada sección
         function updateCount(categoryContainer) {
           categoryContainer.countSpan.textContent = " (" + categoryContainer.clientsContainer.childElementCount + ")";
         }
-        // Función para crear cada contenedor de categoría con su título, contador y contenedor flex para los clientes
         const createCategoryContainer = (title, iconClass) => {
           const container = document.createElement('div');
           const header = document.createElement('h2');
@@ -369,7 +403,7 @@
           categoryHeader.classList.add('category-header');
           const iconSpan = document.createElement('span');
           iconSpan.className = `category-icon ${iconClass}`;
-          iconSpan.setAttribute('aria-hidden', 'true'); // for accessibility
+          iconSpan.setAttribute('aria-hidden', 'true');
           const titleSpan = document.createElement('span');
           titleSpan.textContent = title;
           const countSpan = document.createElement('span');
@@ -380,14 +414,11 @@
           toggleIndicator.style.fontSize = "0.8em";
           toggleIndicator.style.marginLeft = "10px";
           toggleIndicator.textContent = "Ocultar [-]";
-
           categoryHeader.appendChild(iconSpan);
           categoryHeader.appendChild(titleSpan);
           categoryHeader.appendChild(countSpan);
           categoryHeader.appendChild(toggleIndicator);
           header.appendChild(categoryHeader);
-
-
           const clientsContainer = document.createElement('div');
           clientsContainer.classList.add('clients-container');
           clientsContainer.style.display = 'flex';
@@ -412,29 +443,15 @@
         const inProgress = createCategoryContainer("Clientes en progreso", "fas fa-spinner fa-spin");
         const desaprobados = createCategoryContainer("Clientes desaprobados", "fas fa-ban");
 
-        const clientsData = []; // Array to hold processed client data for sorting
-
-
-        // Se omite la primera fila (encabezados)
+        const clientsData = [];
         for (let i = 1; i < rows.length; i++) {
           let row = rows[i];
           try {
-            // Columnas relevantes:
-            // Tipo Documento: columna F (índice 5)
-            // Nombre: columna H (índice 7)
-            // DNI: columna G (índice 6)
-            // Estado de pedido: columna Y (índice 24)
-            // Estado de orden: columna AB (índice 27)
-            // Fecha de programación: columna AK (índice 36)
-            // Hora / tramo: columna AL (índice 37)
-            // Para desaprobados, se usa columna AC (índice 28)
             let nombre = row[7] || '';
             let dni = row[6] || '';
-            // Validación y completado de ceros según Tipo Documento (columna F, índice 5)
-            let tipoDoc = row[5] || '';
-            tipoDoc = tipoDoc.trim().toLowerCase();
+            let tipoDoc = (row[5] || '').trim().toLowerCase();
             let expectedLength = 0;
-            let docLabel = "DNI"; // Default label
+            let docLabel = "DNI";
             if (tipoDoc === "dni") {
               expectedLength = 8;
               docLabel = "DNI";
@@ -452,11 +469,10 @@
             let statePedido = (row[24] || "").trim().toLowerCase();
             let estadoOrden = (row[27] || "").trim().toLowerCase();
             let category = "";
-
             if (estadoOrden === "ejecutada") {
               category = "installed";
             } else if (statePedido === "validado" && estadoOrden === "programada" && row[36] && row[36].trim() !== "" && row[37] && row[37].trim() !== "") {
-              let scheduledDateStr = row[36].trim(); // formato dd-mm-yyyy
+              let scheduledDateStr = row[36].trim();
               let scheduledTimeStr = row[37].trim();
               let dateParts = scheduledDateStr.split("-");
               if (dateParts.length < 3) {
@@ -475,7 +491,6 @@
                   if (ampm === "AM" && hour === 12) { hour = 0; }
                 }
                 let scheduledDateTime = new Date(year, month, day, hour, minute, second);
-                // Fin de la franja: se suma 4 horas a la hora programada
                 let scheduledEndTime = new Date(scheduledDateTime.getTime() + 4 * 60 * 60 * 1000);
                 if (now <= scheduledEndTime) {
                   category = "programmed";
@@ -490,188 +505,237 @@
             } else {
               category = "desaprobados";
             }
-
             clientsData.push({ rowData: row, category: category, nombre: nombre, dni: dni, docLabel: docLabel });
-
-
           } catch(err) {
             console.error(`Error procesando la fila ${i}: ${err}`);
           }
         }
-
-        // Sort clientsData array alphabetically by name
         clientsData.sort((a, b) => a.nombre.localeCompare(b.nombre));
-
-
         clientsData.forEach(clientInfo => {
-            const row = clientInfo.rowData;
-            const category = clientInfo.category;
-            const nombre = clientInfo.nombre;
-            const dni = clientInfo.dni;
-            const docLabel = clientInfo.docLabel;
+          const row = clientInfo.rowData;
+          const category = clientInfo.category;
+          const nombre = clientInfo.nombre;
+          const dni = clientInfo.dni;
+          const docLabel = clientInfo.docLabel;
+          const clientDiv = document.createElement('div');
+          clientDiv.classList.add('client-block');
 
-
-            // Crear el bloque del cliente
-            const clientDiv = document.createElement('div');
-            clientDiv.classList.add('client-block');
-
-            let contentHTML = "";
-            contentHTML = `
-                <p>Nombre: ${nombre}</p>
-                <p>${docLabel}: <span class="dni" style="cursor: pointer; text-decoration: underline;">${dni}</span></p>
-            `;
-            if (category === "installed") {
-              contentHTML += `<p>Instalada!</p>`;
-            } else if (category === "programmed") {
-              let scheduledTime = row[37] || "";
-              let tramo = "";
-              if (scheduledTime.startsWith("08")) {
-                tramo = "8 a 12";
-              } else if (scheduledTime.startsWith("12")) {
-                tramo = "12 a 4";
-              } else if (scheduledTime.startsWith("16") || scheduledTime.startsWith("4")) {
-                tramo = "4 a 8";
-              } else {
-                tramo = scheduledTime;
-              }
-              contentHTML += `<p>Programado para: ${row[36]} de ${tramo}</p>`;
-            } else if (category === "reviewed") {
-              contentHTML += `
-                <p>Número de contacto: ${row[9] || ''}</p>
-                <p>Distrito: ${row[13] || ''}</p>
-                <p>Llamar a programar por favor</p>
-              `;
-            } else if (category === "notInstalled") {
-              let scheduledTime = row[37] || "";
-              let tramo = "";
-              if (scheduledTime.startsWith("08")) {
-                tramo = "8 a 12";
-              } else if (scheduledTime.startsWith("12")) {
-                tramo = "12 a 4";
-              } else if (scheduledTime.startsWith("16") || scheduledTime.startsWith("4")) {
-                tramo = "4 a 8";
-              } else {
-                tramo = scheduledTime;
-              }
-              contentHTML += `
-                <p>Celular: ${row[9] || ''}</p>
-                <p>Distrito: ${row[13] || ''}</p>
-        <p>Programado para: ${row[36]} de ${tramo}</p>
-                <p>Me puede facilitar información del status de este cliente por favor</p>
-              `;
-            } else if (category === "inProgress") {
-              contentHTML += `<p>En progreso</p>`;
-            } else if (category === "desaprobados") {
-              contentHTML += `<p>${row[24] || ''} - ${row[25] || ''}</p>`;
+          let contentHTML = `
+            <p>Nombre: ${nombre}</p>
+            <p>${docLabel}: <span class="dni" style="cursor: pointer; text-decoration: underline;">${dni}</span></p>
+          `;
+          if (category === "installed") {
+            contentHTML += `<p>Instalada!</p>`;
+          } else if (category === "programmed") {
+            let scheduledTime = row[37] || "";
+            let tramo = "";
+            if (scheduledTime.startsWith("08")) {
+              tramo = "8 a 12";
+            } else if (scheduledTime.startsWith("12")) {
+              tramo = "12 a 4";
+            } else if (scheduledTime.startsWith("16") || scheduledTime.startsWith("4")) {
+              tramo = "4 a 8";
+            } else {
+              tramo = scheduledTime;
             }
+            contentHTML += `<p>Programado para: ${row[36]} de ${tramo}</p>`;
+          } else if (category === "reviewed") {
+            contentHTML += `
+              <p>Número de contacto: ${row[9] || ''}</p>
+              <p>Distrito: ${row[13] || ''}</p>
+              <p>Llamar a programar por favor</p>
+            `;
+          } else if (category === "notInstalled") {
+            let scheduledTime = row[37] || "";
+            let tramo = "";
+            if (scheduledTime.startsWith("08")) {
+              tramo = "8 a 12";
+            } else if (scheduledTime.startsWith("12")) {
+              tramo = "12 a 4";
+            } else if (scheduledTime.startsWith("16") || scheduledTime.startsWith("4")) {
+              tramo = "4 a 8";
+            } else {
+              tramo = scheduledTime;
+            }
+            contentHTML += `
+              <p>Celular: ${row[9] || ''}</p>
+              <p>Distrito: ${row[13] || ''}</p>
+              <p>Programado para: ${row[36]} de ${tramo}</p>
+              <p>Me puede facilitar información del status de este cliente por favor</p>
+            `;
+          } else if (category === "inProgress") {
+            contentHTML += `<p>En progreso</p>`;
+          } else if (category === "desaprobados") {
+            contentHTML += `<p>${row[24] || ''} - ${row[25] || ''}</p>`;
+          }
+          clientDiv.innerHTML = contentHTML;
 
-            contentHTML += `<div class="client-notes-container">
-                              <p style="margin-bottom: 5px;">Notas:</p>
-                              <div class="client-notes" contenteditable="true">${getNotesForDni(dni)}</div>
-                            </div>`;
+          // Evento para copiar solo el DNI (al hacer clic sobre el span se copia el documento)
+          const dniSpan = clientDiv.querySelector('.dni');
+          dniSpan.addEventListener('click', () => {
+            const originalText = dniSpan.textContent;
+            navigator.clipboard.writeText(originalText)
+              .then(() => {
+                dniSpan.textContent = "copiado";
+                setTimeout(() => { dniSpan.textContent = originalText; }, 1000);
+              })
+              .catch(err => { alert(`Error al copiar el ${docLabel}.`); });
+          });
 
+          // Contenedor de botones
+          const buttonsContainer = document.createElement('div');
+          buttonsContainer.classList.add('client-buttons');
 
-            clientDiv.innerHTML = contentHTML;
+          const copyButton = document.createElement('button');
+          copyButton.textContent = 'Copiar';
+          // Verificamos si el cliente ya está marcado como copiado
+          if (isCopied(dni)) {
+            copyButton.textContent = '✔ Copiado!';
+            copyButton.style.backgroundColor = "#4CAF50";
+            clientDiv.style.opacity = "0.5";
+            copyButton.dataset.copied = "true";
+          } else {
+            copyButton.dataset.copied = "false";
+          }
+          buttonsContainer.appendChild(copyButton);
 
-            // Funcionalidad para copiar solo el DNI al hacer clic
-            const dniSpan = clientDiv.querySelector('.dni');
-            dniSpan.addEventListener('click', () => {
-              const originalText = dniSpan.textContent;
-              navigator.clipboard.writeText(originalText)
-                .then(() => {
-                  dniSpan.textContent = "copiado";
-                  setTimeout(() => {
-                    dniSpan.textContent = originalText;
-                  }, 1000);
-                })
-                .catch(err => {
-                  alert("Error al copiar el ${docLabel}.");
-                });
-            });
-
-            // Container for buttons
-            const buttonsContainer = document.createElement('div');
-            buttonsContainer.classList.add('client-buttons');
-
-            // Botón para copiar la información completa del cliente
-            const copyButton = document.createElement('button');
-            copyButton.textContent = 'Copiar';
-            buttonsContainer.appendChild(copyButton);
-            copyButton.addEventListener('click', () => {
-              let textToCopy = clientDiv.textContent.replace('Copiar','').replace('Derivado','').replace('Derivado ✓','').trim(); // remove both button texts
-              textToCopy = textToCopy.split('\n').map(line => line.trim()).join('\n');
+          // Acción para el botón Copiar
+          copyButton.addEventListener('click', () => {
+            if (copyButton.dataset.copied === "true") {
+              // Quitar estado copiado
+              copyButton.textContent = 'Copiar';
+              copyButton.style.backgroundColor = "#6c63ff";
+              clientDiv.style.opacity = "1";
+              copyButton.dataset.copied = "false";
+              setCopiedState(dni, false);
+            } else {
+              const textToCopy = getClientCopyText(clientInfo);
               navigator.clipboard.writeText(textToCopy)
                 .then(() => {
-                  copyButton.textContent = 'Copiado!';
-                  clientDiv.style.backgroundColor = "#e4e9de";
-                  setTimeout(() => {
-                    copyButton.textContent = 'Copiar';
-                    clientDiv.style.backgroundColor = ''; // Reset color
-                  }, 2000);
+                  copyButton.textContent = '✔ Copiado!';
+                  copyButton.style.backgroundColor = "#4CAF50";
+                  clientDiv.style.opacity = "0.5";
+                  copyButton.dataset.copied = "true";
+                  setCopiedState(dni, true);
                 })
-                .catch(err => {
-                  alert("Error al copiar el texto.");
-                });
-            });
-
-
-            if (category === "installed") {
-              // Verificar si el DNI ya está derivado y marcar visualmente
-              if (isDniDerived(dni)) {
-                clientDiv.classList.add('derivado');
-              }
-              // Botón "Derivado" solo para clientes instalados
-              const derivarButton = document.createElement('button');
-              derivarButton.textContent = isDniDerived(dni) ? 'Derivado ✓' : 'Derivado'; // Initial text based on status
-              derivarButton.disabled = isDniDerived(dni); // Disable if already derived
-              buttonsContainer.appendChild(derivarButton);
-
-              derivarButton.addEventListener('click', () => {
-                saveDerivedDni(dni);
-                clientDiv.classList.add('derivado');
-                derivarButton.textContent = 'Derivado ✓'; // Confirmation text
-                derivarButton.disabled = true;
-              });
+                .catch(err => { alert("Error al copiar el texto."); });
             }
-            clientDiv.appendChild(buttonsContainer);
+          });
 
-            const notesDiv = clientDiv.querySelector('.client-notes');
-            notesDiv.addEventListener('input', (event) => { // Changed to 'input' event
-              saveNotesForDni(dni, event.target.textContent);
-            });
-
-
-            // Agregar el bloque al contenedor correspondiente según la categoría y actualizar el contador
-            if (category === "installed") {
-              installed.clientsContainer.appendChild(clientDiv);
-              updateCount(installed);
-            } else if (category === "programmed") {
-              programmed.clientsContainer.appendChild(clientDiv);
-              updateCount(programmed);
-            } else if (category === "reviewed") {
-              reviewed.clientsContainer.appendChild(clientDiv);
-              updateCount(reviewed);
-            } else if (category === "notInstalled") {
-              notInstalled.clientsContainer.appendChild(clientDiv);
-              updateCount(notInstalled);
-            } else if (category === "inProgress") {
-              inProgress.clientsContainer.appendChild(clientDiv);
-              updateCount(inProgress);
-            } else if (category === "desaprobados") {
-              desaprobados.clientsContainer.appendChild(clientDiv);
-              updateCount(desaprobados);
+          // Botón "Derivado" presente en todos los bloques con funcionalidad de toggle
+          const derivarButton = document.createElement('button');
+          if (isDniDerived(dni)) {
+            derivarButton.textContent = 'Derivado ✓';
+            clientDiv.classList.add('derivado');
+          } else {
+            derivarButton.textContent = 'Derivado';
+          }
+          derivarButton.addEventListener('click', () => {
+            if (isDniDerived(dni)) {
+              removeDerivedDni(dni);
+              derivarButton.textContent = 'Derivado';
+              clientDiv.classList.remove('derivado');
+            } else {
+              saveDerivedDni(dni);
+              derivarButton.textContent = 'Derivado ✓';
+              clientDiv.classList.add('derivado');
             }
+          });
+          buttonsContainer.appendChild(derivarButton);
+
+          clientDiv.appendChild(buttonsContainer);
+
+          // Crear el contenedor de notas con posición original y con fecha visible
+          const notesContainer = document.createElement('div');
+          notesContainer.className = 'client-notes-container';
+          notesContainer.innerHTML = `<p style="margin-bottom: 5px;">Notas:</p>`;
+          const noteData = getNoteDataForDni(dni);
+          let noteElement = createNoteElement(noteData.note, noteData.timestamp);
+          noteElement.dataset.dni = dni;
+          // Al hacer clic en el recuadro de nota se abre el popup de edición
+          noteElement.addEventListener('click', function(e) {
+            openNoteModal(dni, noteElement);
+          });
+          notesContainer.appendChild(noteElement);
+          clientDiv.appendChild(notesContainer);
+
+          // Agregar el bloque al contenedor según la categoría
+          if (category === "installed") { installed.clientsContainer.appendChild(clientDiv); updateCount(installed); }
+          else if (category === "programmed") { programmed.clientsContainer.appendChild(clientDiv); updateCount(programmed); }
+          else if (category === "reviewed") { reviewed.clientsContainer.appendChild(clientDiv); updateCount(reviewed); }
+          else if (category === "notInstalled") { notInstalled.clientsContainer.appendChild(clientDiv); updateCount(notInstalled); }
+          else if (category === "inProgress") { inProgress.clientsContainer.appendChild(clientDiv); updateCount(inProgress); }
+          else if (category === "desaprobados") { desaprobados.clientsContainer.appendChild(clientDiv); updateCount(desaprobados); }
         });
-
-
         resultsContainer.appendChild(installed.container);
         resultsContainer.appendChild(programmed.container);
         resultsContainer.appendChild(reviewed.container);
         resultsContainer.appendChild(notInstalled.container);
         resultsContainer.appendChild(inProgress.container);
         resultsContainer.appendChild(desaprobados.container);
+        applySearchFilter();
+      }
 
-        applySearchFilter(); // Apply initial filter if there is a search term on load
+      // Función para crear el recuadro de nota con truncado y fecha siempre visible
+      function createNoteElement(note, timestamp) {
+        const container = document.createElement('div');
+        container.classList.add('client-notes');
+        let truncated = note;
+        if (note.length > 20) {
+          truncated = note.substring(0,20) + "...";
+        }
+        // Contenedor principal: muestra el contenido (truncado o completo)
+        const contentSpan = document.createElement('span');
+        contentSpan.classList.add('note-content');
+        contentSpan.textContent = truncated;
+        container.appendChild(contentSpan);
+        // Agrega la fecha (timestamp) siempre visible debajo del contenido
+        if (timestamp) {
+          const tsSpan = document.createElement('span');
+          tsSpan.className = "note-timestamp";
+          tsSpan.textContent = `(${timestamp})`;
+          container.appendChild(tsSpan);
+        }
+        return container;
+      }
+
+      // Función para abrir el modal de edición de nota
+      function openNoteModal(dni, noteElement) {
+        const modal = document.getElementById('note-modal');
+        const textarea = document.getElementById('note-modal-textarea');
+        const timestampDiv = document.getElementById('note-modal-timestamp');
+        const saveButton = document.getElementById('note-modal-save');
+        const closeButton = document.getElementById('note-modal-close');
+        const closeSpan = document.querySelector('.close-button');
+        const noteData = getNoteDataForDni(dni);
+        textarea.value = noteData.note;
+        timestampDiv.textContent = noteData.timestamp ? `Última modificación: ${noteData.timestamp}` : "";
+        modal.style.display = "block";
+
+        function closeModal() {
+          modal.style.display = "none";
+          saveButton.removeEventListener('click', saveHandler);
+          closeButton.removeEventListener('click', closeModal);
+          closeSpan.removeEventListener('click', closeModal);
+        }
+        function saveHandler() {
+          const newNote = textarea.value;
+          saveNotesForDni(dni, newNote);
+          const newData = getNoteDataForDni(dni);
+          const newNoteElement = createNoteElement(newData.note, newData.timestamp);
+          newNoteElement.dataset.dni = dni;
+          newNoteElement.addEventListener('click', function(e) {
+            openNoteModal(dni, newNoteElement);
+          });
+          noteElement.parentNode.replaceChild(newNoteElement, noteElement);
+          closeModal();
+        }
+        saveButton.addEventListener('click', saveHandler);
+        closeButton.addEventListener('click', closeModal);
+        closeSpan.addEventListener('click', closeModal);
+        window.onclick = function(event) {
+          if (event.target == modal) { closeModal(); }
+        };
       }
     });
   </script>
