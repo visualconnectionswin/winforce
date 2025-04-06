@@ -3,103 +3,492 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Procesador de archivos de clientes - CRM</title>
+  <title>Visual Connections - crm</title>
   <!-- Fuente Poppins -->
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" integrity="sha512-9usAa10IRO0HhonpyAIVpjrylPvoDwiPUiKdWk5t3PyolY1cOd4DSE0Ga+ri4AuTroPR5aQvXU9xC6qOPnzFeg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+        integrity="sha512-9usAa10IRO0HhonpyAIVpjrylPvoDwiPUiKdWk5t3PyolY1cOd4DSE0Ga+ri4AuTroPR5aQvXU9xC6qOPnzFeg=="
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
   <style>
     :root {
-      /* Variable para controlar el número de clientes por línea */
-      --clients-per-line: 2;
+      --clients-per-line: 6;
+      --primary-color: #4361ee;
+      --primary-light: #eef2ff;
+      --secondary-color: #3a0ca3;
+      --success-color: #2ecc71;
+      --warning-color: #f39c12;
+      --danger-color: #e74c3c;
+      --gray-light: #f8f9fa;
+      --gray-medium: #e9ecef;
+      --gray-dark: #495057;
+      --border-radius: 12px;
+      --box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      --transition: all 0.3s ease;
     }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
     body {
       font-family: 'Poppins', sans-serif;
-      margin: 20px;
+      background-color: #f5f7ff;
+      color: #333;
+      line-height: 1.6;
+      padding: 0;
+      margin: 0;
     }
-    #drop-area {
-      border: 2px dashed #ccc;
-      border-radius: 20px;
+
+    .container {
+      max-width: 1600px;
+      margin: 0 auto;
       padding: 20px;
-      text-align: center;
-      margin-bottom: 20px;
-      transition: border-color 0.3s;
     }
-    #drop-area.highlight {
-      border-color: purple;
+
+    header {
+      background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+      color: white;
+      padding: 20px;
+      border-radius: 0 0 var(--border-radius) var(--border-radius);
+      margin-bottom: 30px;
+      box-shadow: var(--box-shadow);
     }
-    #search-container {
+
+    header h1 {
+      font-size: 1.8rem;
       margin-bottom: 10px;
-      text-align: right;
+      font-weight: 600;
     }
+
+    header p {
+      opacity: 0.9;
+      font-weight: 300;
+    }
+
+    #drop-area {
+      border: 2px dashed #b8c2cc;
+      border-radius: var(--border-radius);
+      padding: 30px;
+      text-align: center;
+      margin-bottom: 30px;
+      transition: var(--transition);
+      background-color: white;
+      box-shadow: var(--box-shadow);
+      position: relative;
+      overflow: hidden;
+    }
+
+    #drop-area:before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(135deg, rgba(67, 97, 238, 0.05), rgba(58, 12, 163, 0.05));
+      z-index: 0;
+    }
+
+    #drop-area > * {
+      position: relative;
+      z-index: 1;
+    }
+
+    #drop-area.highlight {
+      border-color: var(--primary-color);
+      background-color: var(--primary-light);
+    }
+
+    #drop-area p {
+      margin: 5px 0;
+      color: var(--gray-dark);
+    }
+
+    #file-input {
+      display: none;
+    }
+
+    .file-label {
+      display: inline-block;
+      padding: 10px 20px;
+      background-color: var(--primary-color);
+      color: white;
+      border-radius: 30px;
+      cursor: pointer;
+      font-weight: 500;
+      margin-top: 15px;
+      transition: var(--transition);
+      box-shadow: 0 2px 10px rgba(67, 97, 238, 0.3);
+    }
+
+    .file-label:hover {
+      background-color: var(--secondary-color);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 15px rgba(67, 97, 238, 0.4);
+    }
+
+    .file-upload-icon {
+      margin-right: 8px;
+    }
+
+    #search-container {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      background-color: white;
+      padding: 15px;
+      border-radius: var(--border-radius);
+      box-shadow: var(--box-shadow);
+    }
+
+    .search-box {
+      position: relative;
+      flex-grow: 1;
+      max-width: 400px;
+    }
+
     #search-input {
-      padding: 8px;
-      border-radius: 5px;
-      border: 1px solid #ccc;
+      width: 100%;
+      padding: 12px 40px 12px 15px;
+      border-radius: 30px;
+      border: 1px solid #ddd;
+      font-family: 'Poppins', sans-serif;
+      font-size: 0.9rem;
+      transition: var(--transition);
+      box-shadow: 0 2px 5px rgba(0,0,0,0.05);
     }
+
+    #search-input:focus {
+      outline: none;
+      border-color: var(--primary-color);
+      box-shadow: 0 2px 8px rgba(67, 97, 238, 0.2);
+    }
+
+    .search-icon {
+      position: absolute;
+      right: 15px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--gray-dark);
+    }
+
+    .category-section {
+      background-color: white;
+      border-radius: var(--border-radius);
+      margin-bottom: 25px;
+      overflow: hidden;
+      box-shadow: var(--box-shadow);
+    }
+
     .category-header {
       display: flex;
       align-items: center;
-      gap: 10px;
+      padding: 15px 20px;
+      background-color: var(--gray-light);
+      border-bottom: 1px solid var(--gray-medium);
+      cursor: pointer;
+      transition: var(--transition);
     }
+
+    .category-header:hover {
+      background-color: var(--primary-light);
+    }
+
     .category-icon {
       font-size: 1.2em;
+      margin-right: 15px;
+      color: var(--primary-color);
+      width: 24px;
+      text-align: center;
     }
+
+    .category-title {
+      font-weight: 500;
+      font-size: 1.1rem;
+      flex-grow: 1;
+    }
+
+    .category-count {
+      background-color: var(--primary-light);
+      color: var(--primary-color);
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      font-weight: 500;
+    }
+
+    .category-toggle {
+      margin-left: 15px;
+      font-size: 0.8rem;
+      color: var(--gray-dark);
+    }
+
     .clients-container {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+      gap: 20px;
+      padding: 20px;
     }
+
     .client-block {
-      border: 1px solid #ccc;
-      border-radius: 10px;
-      padding: 10px;
-      background-color: #aef39b;
-      box-sizing: border-box;
-      flex: 0 0 calc(100% / var(--clients-per-line) - 10px);
-      transition: background-color 0.3s, transform 0.3s, opacity 0.3s;
+      border-radius: var(--border-radius);
+      padding: 20px;
+      background-color: white;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+      transition: var(--transition);
+      border-left: 4px solid var(--success-color);
       display: flex;
       flex-direction: column;
-      justify-content: space-between;
+      height: 100%;
     }
-    /* Estilo para clientes derivados */
+
+    .client-block.installed {
+      border-left-color: var(--success-color);
+    }
+
+    .client-block.programmed {
+      border-left-color: var(--primary-color);
+    }
+
+    .client-block.reviewed {
+      border-left-color: var(--warning-color);
+    }
+
+    .client-block.notInstalled {
+      border-left-color: var(--danger-color);
+    }
+
+    .client-block.inProgress {
+      border-left-color: #9c27b0;
+    }
+
+    .client-block.desaprobados {
+      border-left-color: #607d8b;
+    }
+
     .client-block.derivado {
-      background-color: #ffe0b2;
+      background-color: #fffaf0;
+      border: 1px solid #ffe0b2;
     }
-    .client-block p {
-      margin: 2px 0;
-    }
+
     .client-block:hover {
-      transform: scale(1.02);
+      transform: translateY(-3px);
+      box-shadow: 0 8px 15px rgba(0,0,0,0.1);
     }
+
+    .client-info {
+      flex-grow: 1;
+    }
+
+    .client-block p {
+      margin: 8px 0;
+      line-height: 1.4;
+    }
+
+    .client-name {
+      font-weight: 500;
+      font-size: 1.1rem;
+      margin-bottom: 10px;
+      color: var(--secondary-color);
+    }
+
+    .client-doc {
+      display: flex;
+      align-items: center;
+      margin-bottom: 15px;
+    }
+
+    .doc-label {
+      background-color: var(--gray-light);
+      padding: 3px 8px;
+      border-radius: 5px;
+      margin-right: 10px;
+      font-size: 0.8rem;
+      font-weight: 500;
+    }
+
+    .dni {
+      cursor: pointer;
+      color: var(--primary-color);
+      font-weight: 500;
+      position: relative;
+    }
+
+    .dni:hover {
+      text-decoration: underline;
+    }
+
+    .dni:after {
+      content: "copiar";
+      position: absolute;
+      font-size: 0.7rem;
+      background-color: var(--gray-dark);
+      color: white;
+      padding: 2px 5px;
+      border-radius: 3px;
+      opacity: 0;
+      bottom: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      transition: opacity 0.2s;
+      pointer-events: none;
+    }
+
+    .dni:hover:after {
+      opacity: 0.9;
+    }
+
+    .client-detail {
+      margin-top: 15px;
+      font-size: 0.95rem;
+    }
+
+    .client-detail i {
+      width: 20px;
+      text-align: center;
+      margin-right: 8px;
+      color: var(--gray-dark);
+    }
+
+    .highlight-status {
+      padding: 3px 10px;
+      border-radius: 20px;
+      display: inline-block;
+      margin-top: 5px;
+      font-size: 0.8rem;
+      font-weight: 500;
+    }
+
+    .highlight-status.installed {
+      background-color: rgba(46, 204, 113, 0.15);
+      color: #27ae60;
+    }
+
+    .highlight-status.programmed {
+      background-color: rgba(67, 97, 238, 0.15);
+      color: var(--primary-color);
+    }
+
+    .highlight-status.warning {
+      background-color: rgba(243, 156, 18, 0.15);
+      color: #d35400;
+    }
+
+    .client-status-icon {
+        margin-right: 5px;
+    }
+
     .client-buttons {
       display: flex;
       justify-content: space-between;
-      align-items: center;
-      margin-top: 10px;
+      margin-top: 20px;
+      gap: 10px;
     }
-    .client-buttons button {
-      margin-top: 0;
-    }
-    .client-buttons button:last-child {
-      margin-left: auto;
-    }
-    .client-notes-container {
-      margin-top: 10px;
-    }
-    /* Recuadro de notas en línea: se mantiene en su posición original */
-    .client-notes {
-      border: 1px solid #ddd;
-      padding: 5px;
+
+    button {
+      padding: 8px 15px;
+      border: none;
       border-radius: 5px;
-      min-height: 30px;
+      cursor: pointer;
+      font-family: 'Poppins', sans-serif;
+      font-size: 0.9rem;
+      font-weight: 500;
+      transition: var(--transition);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    button i {
+      margin-right: 5px;
+    }
+
+    .btn-copy {
+      background-color: var(--primary-color);
+      color: white;
+      flex: 1;
+    }
+
+    .btn-copy:hover {
+      background-color: var(--secondary-color);
+    }
+
+    .btn-copy.copied {
+      background-color: var(--success-color);
+    }
+
+    .btn-derive {
+      background-color: white;
+      color: var(--gray-dark);
+      border: 1px solid #ddd;
+    }
+
+    .btn-derive:hover {
+      background-color: var(--gray-light);
+    }
+
+    .btn-derive.derived {
+      background-color: #ffe0b2;
+      color: #e67e22;
+      border-color: #e67e22;
+    }
+
+    .client-notes-container {
+      margin-top: 15px;
+    }
+
+    .notes-label {
+      font-size: 0.9rem;
+      font-weight: 500;
+      margin-bottom: 8px;
+      color: var(--gray-dark);
+      display: flex;
+      align-items: center;
+    }
+
+    .notes-label i {
+      margin-right: 5px;
+    }
+
+    .client-notes {
+      border: 1px solid #e6e6e6;
+      padding: 10px;
+      border-radius: 5px;
+      min-height: 40px;
+      background-color: var(--gray-light);
+      font-size: 0.9rem;
       white-space: pre-wrap;
       word-wrap: break-word;
       overflow-y: auto;
       max-height: 100px;
       cursor: pointer;
-      position: relative;
+      transition: var(--transition);
     }
-    /* La fecha se muestra siempre debajo del contenido de la nota */
+
+    .client-notes:hover {
+      border-color: var(--primary-color);
+      background-color: white;
+    }
+
+    .client-notes:empty {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #aaa;
+      font-style: italic;
+    }
+
+    .client-notes:empty:before {
+      content: "Sin notas";
+    }
+
+    .note-content {
+      display: block;
+    }
+
     .note-timestamp {
       font-size: 0.7em;
       color: #777;
@@ -107,28 +496,7 @@
       text-align: right;
       margin-top: 5px;
     }
-    button {
-      padding: 5px 10px;
-      border: none;
-      border-radius: 5px;
-      background-color: #6c63ff;
-      color: #fff;
-      cursor: pointer;
-      transition: background-color 0.3s;
-    }
-    button:hover {
-      background-color: #5750d4;
-    }
-    h2 {
-      border-bottom: 2px solid #ccc;
-      padding-bottom: 5px;
-      margin-top: 20px;
-    }
-    pre {
-      white-space: pre-wrap;
-      word-wrap: break-word;
-    }
-    /* Estilos para el modal de edición de nota */
+
     .modal {
       display: none;
       position: fixed;
@@ -138,143 +506,313 @@
       width: 100%;
       height: 100%;
       overflow: auto;
-      background-color: rgba(0,0,0,0.4);
+      background-color: rgba(0,0,0,0.5);
+      animation: fadeIn 0.3s;
     }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
     .modal-content {
       background-color: #fefefe;
-      margin: 10% auto;
-      padding: 20px;
-      border: 1px solid #888;
-      width: 80%;
-      max-width: 500px;
-      border-radius: 10px;
+      margin: 7% auto;
+      padding: 25px;
+      border-radius: var(--border-radius);
+      width: 90%;
+      max-width: 600px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+      animation: slideIn 0.3s;
       position: relative;
     }
+
+    @keyframes slideIn {
+      from { transform: translateY(-30px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      padding-bottom: 15px;
+      border-bottom: 1px solid var(--gray-medium);
+    }
+
+    .modal-title {
+      font-size: 1.2rem;
+      font-weight: 500;
+      color: var(--secondary-color);
+    }
+
     .close-button {
-      position: absolute;
-      right: 10px;
-      top: 5px;
       font-size: 24px;
       font-weight: bold;
       color: #aaa;
       cursor: pointer;
+      transition: color 0.2s;
     }
+
     .close-button:hover {
       color: #000;
     }
+
+    .modal-body {
+      margin-bottom: 20px;
+    }
+
+    #note-modal-textarea {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      font-family: 'Poppins', sans-serif;
+      font-size: 0.95rem;
+      resize: vertical;
+      min-height: 120px;
+      transition: border-color 0.3s;
+    }
+
+    #note-modal-textarea:focus {
+      outline: none;
+      border-color: var(--primary-color);
+    }
+
+    #note-modal-timestamp {
+      font-size: 0.8em;
+      color: #777;
+      margin: 10px 0;
+    }
+
+    .modal-footer {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      margin-top: 20px;
+    }
+
+    .btn-modal-save {
+      background-color: var(--primary-color);
+      color: white;
+      padding: 10px 20px;
+    }
+
+    .btn-modal-save:hover {
+      background-color: var(--secondary-color);
+    }
+
+    .btn-modal-close {
+      background-color: white;
+      color: var(--gray-dark);
+      border: 1px solid #ddd;
+      padding: 10px 20px;
+    }
+
+    .btn-modal-close:hover {
+      background-color: var(--gray-light);
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 40px 20px;
+      color: var(--gray-dark);
+    }
+
+    .empty-state i {
+      font-size: 3rem;
+      color: #ddd;
+      margin-bottom: 20px;
+    }
+
+    .empty-state p {
+      font-size: 1.1rem;
+      max-width: 400px;
+      margin: 0 auto;
+    }
+
+    /* Responsive styles */
+    @media (max-width: 991px) {
+      :root {
+        --clients-per-line: 6;
+      }
+
+      .clients-container {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    @media (max-width: 767px) {
+      .container {
+        padding: 15px;
+      }
+
+      header {
+        padding: 15px;
+      }
+
+      header h1 {
+        font-size: 1.5rem;
+      }
+
+      .clients-container {
+        grid-template-columns: 1fr;
+        padding: 15px;
+      }
+
+      #search-container {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+      }
+
+      .search-box {
+        width: 100%;
+        max-width: none;
+      }
+    }
   </style>
-  <!-- Se incluye la librería XLSX para leer archivos Excel -->
+  <!-- Librería XLSX para leer archivos Excel -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <!-- Firebase (versión 8) -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
 </head>
 <body>
-  <h1>Procesador de archivos de clientes - CRM</h1>
-  <p>Arrastra y suelta un archivo o haz clic en el botón para seleccionar uno desde tu dispositivo.</p>
-  <div id="drop-area">
-    <p>Arrastra y suelta el archivo aquí</p>
-    <p>o</p>
-    <input type="file" id="file-input" accept=".xls,.xlsx,.html,.htm">
-  </div>
+  <header>
+    <div class="container">
+      <h1>Visual Connections - CRM</h1>
+      <p>Gestiona y visualiza la información de clientes</p>
+    </div>
+  </header>
 
-  <div id="search-container">
-    <input type="text" id="search-input" placeholder="Buscar por Nombre o DNI">
-  </div>
+  <div class="container">
+    <div id="drop-area">
+      <p>Arrastra y suelta el archivo Excel o HTML que contiene los datos de clientes</p>
+      <p>o</p>
+      <label for="file-input" class="file-label">
+        <i class="fas fa-upload file-upload-icon"></i>
+        Seleccionar archivo
+      </label>
+      <input type="file" id="file-input" accept=".xls,.xlsx,.html,.htm">
+    </div>
 
-  <div id="results"></div>
+    <div id="search-container">
+      <div class="search-box">
+        <input type="text" id="search-input" placeholder="Buscar por Nombre o DNI">
+        <i class="fas fa-search search-icon"></i>
+      </div>
+    </div>
+
+    <div id="results">
+      <div class="empty-state">
+        <i class="fas fa-file-import"></i>
+        <p>Selecciona o arrastra un archivo para comenzar a procesar los datos de los clientes.</p>
+      </div>
+    </div>
+  </div>
 
   <!-- Modal para edición de nota -->
   <div id="note-modal" class="modal">
     <div class="modal-content">
-      <span class="close-button">&times;</span>
-      <h3>Editar Nota</h3>
-      <textarea id="note-modal-textarea" rows="5" style="width:100%;"></textarea>
-      <div id="note-modal-timestamp" style="font-size:0.8em; color:#777; margin-top:10px;"></div>
-      <button id="note-modal-save">Guardar</button>
-      <button id="note-modal-close">Cerrar</button>
+      <div class="modal-header">
+        <h3 class="modal-title">Editar Nota</h3>
+        <span class="close-button">×</span>
+      </div>
+      <div class="modal-body">
+        <textarea id="note-modal-textarea" rows="5" placeholder="Ingresa tu nota aquí..."></textarea>
+        <div id="note-modal-timestamp"></div>
+      </div>
+      <div class="modal-footer">
+        <button id="note-modal-save" class="btn-modal-save">
+          <i class="fas fa-save"></i> Guardar
+        </button>
+        <button id="note-modal-close" class="btn-modal-close">
+          <i class="fas fa-times"></i> Cancelar
+        </button>
+      </div>
     </div>
   </div>
 
   <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      const clientsPerLine = 6;
-      document.documentElement.style.setProperty('--clients-per-line', clientsPerLine);
+    // Inicialización de Firebase con tu configuración
+    var firebaseConfig = {
+      apiKey: "AIzaSyCkPL0qOB0maHD8U6F-lxD_Pq7xUpSPuhc",
+      authDomain: "estadoclientes-146b02.firebaseapp.com",
+      projectId: "estadoclientes-146b02",
+      storageBucket: "estadoclientes-146b02.appspot.com",
+      messagingSenderId: "906681118562",
+      appId: "1:906681118562:web:471770225b337781fa863b",
+      measurementId: "G-BW86W5P717"
+    };
+    firebase.initializeApp(firebaseConfig);
+    var db = firebase.firestore();
 
-      const dropArea = document.getElementById('drop-area');
-      const fileInput = document.getElementById('file-input');
-      const resultsContainer = document.getElementById('results');
-      const searchInput = document.getElementById('search-input');
+    // Objeto global para almacenar el estado de clientes (clave: DNI)
+    let clientesEstado = {};
 
-      let currentRows = [];
-
-      function applySearchFilter() {
-        const searchTerm = searchInput.value.toLowerCase();
-        resultsContainer.querySelectorAll('.clients-container').forEach(container => {
-          container.childNodes.forEach(clientBlock => {
-            const blockText = clientBlock.textContent.toLowerCase();
-            clientBlock.style.display = blockText.includes(searchTerm) ? '' : 'none';
+    // Función para cargar el estado desde Firestore
+    function cargarEstado() {
+      return db.collection("clientes").get()
+        .then(querySnapshot => {
+          clientesEstado = {};
+          querySnapshot.forEach(doc => {
+            const cliente = doc.data();
+            if (cliente.DNI) {
+              clientesEstado[cliente.DNI] = cliente;
+            }
           });
+        })
+        .catch(err => {
+          console.error("Error al cargar el estado:", err);
+          clientesEstado = {};
         });
-      }
-      searchInput.addEventListener('input', applySearchFilter);
+    }
 
-      function getDerivedDnis() {
-        const derivedDnisStr = localStorage.getItem('derivedDnis');
-        return derivedDnisStr ? JSON.parse(derivedDnisStr) : [];
-      }
-      function saveDerivedDni(dni) {
-        let derivedDnis = getDerivedDnis();
-        if (!derivedDnis.includes(dni)) {
-          derivedDnis.push(dni);
-          localStorage.setItem('derivedDnis', JSON.stringify(derivedDnis));
-        }
-      }
-      function removeDerivedDni(dni) {
-        let derivedDnis = getDerivedDnis();
-        let index = derivedDnis.indexOf(dni);
-        if (index > -1) {
-          derivedDnis.splice(index, 1);
-          localStorage.setItem('derivedDnis', JSON.stringify(derivedDnis));
-        }
-      }
-      function isDniDerived(dni) {
-        return getDerivedDnis().includes(dni);
-      }
+    // Actualiza el estado de un cliente y lo guarda en Firestore
+    function actualizarEstadoCliente(dni, newState) {
+      clientesEstado[dni] = { ...getEstadoCliente(dni), ...newState, DNI: dni };
+      db.collection("clientes").doc(dni).set(clientesEstado[dni], { merge: true })
+        .then(() => { console.log("Estado actualizado para DNI:", dni); })
+        .catch(err => { console.error("Error al actualizar estado para DNI:", dni, err); });
+    }
 
-      // Funciones para manejar el estado "copiado" (persistido en localStorage)
-      function setCopiedState(dni, state) {
-        localStorage.setItem(`copied-${dni}`, state ? "true" : "false");
-      }
-      function isCopied(dni) {
-        return localStorage.getItem(`copied-${dni}`) === "true";
-      }
+    // Retorna el estado de un cliente o valores por defecto
+    function getEstadoCliente(dni) {
+      return clientesEstado[dni] || { copiado: "no", derivado: "no", nota: "", timestamp: "", DNI: dni };
+    }
 
-      // Obtiene la nota y su timestamp para un DNI
-      function getNoteDataForDni(dni) {
-        let note = localStorage.getItem(`notes-${dni}`) || '';
-        let timestamp = localStorage.getItem(`timestamp-${dni}`) || '';
-        return { note, timestamp };
-      }
-      // Guarda la nota y actualiza el timestamp
-      function saveNotesForDni(dni, note) {
-        if (note && note.trim() !== "") {
-          const now = new Date();
-          const timestamp = now.toLocaleDateString() + ' ' + now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
-          localStorage.setItem(`notes-${dni}`, note);
-          localStorage.setItem(`timestamp-${dni}`, timestamp);
-        } else {
-          localStorage.setItem(`notes-${dni}`, '');
-          localStorage.removeItem(`timestamp-${dni}`);
-        }
-      }
+    // Funciones para manejar "derivado" y "copiado"
+    function saveDerivedDni(dni) { actualizarEstadoCliente(dni, { derivado: "si" }); }
+    function removeDerivedDni(dni) { actualizarEstadoCliente(dni, { derivado: "no" }); }
+    function isDniDerived(dni) { return getEstadoCliente(dni).derivado === "si"; }
+    function setCopiedState(dni, state) { actualizarEstadoCliente(dni, { copiado: state ? "si" : "no" }); }
+    function isCopied(dni) { return getEstadoCliente(dni).copiado === "si"; }
 
-      // Previene comportamientos por defecto
+    // Funciones para manejar notas
+    function getNoteDataForDni(dni) {
+      const estado = getEstadoCliente(dni);
+      return { note: estado.nota || '', timestamp: estado.timestamp || '' };
+    }
+    function saveNotesForDni(dni, note) {
+      if (note && note.trim() !== "") {
+        const now = new Date();
+        const timestamp = now.toLocaleDateString() + ' ' + now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
+        actualizarEstadoCliente(dni, { nota: note, timestamp: timestamp });
+      } else {
+        actualizarEstadoCliente(dni, { nota: "", timestamp: "" });
+      }
+    }
+
+    // Esperamos a que el DOM se cargue completamente
+    document.addEventListener('DOMContentLoaded', () => {
+
+      // Manejo de arrastre y suelta
+      const dropArea = document.getElementById('drop-area');
       ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-        dropArea.addEventListener(eventName, preventDefaults, false);
-        document.body.addEventListener(eventName, preventDefaults, false);
+        dropArea.addEventListener(eventName, (e) => { e.preventDefault(); e.stopPropagation(); }, false);
       });
-      function preventDefaults(e) {
-        e.preventDefault();
-        e.stopPropagation();
-      }
       ['dragenter', 'dragover'].forEach(eventName => {
         dropArea.addEventListener(eventName, () => dropArea.classList.add('highlight'), false);
       });
@@ -282,159 +820,182 @@
         dropArea.addEventListener(eventName, () => dropArea.classList.remove('highlight'), false);
       });
       dropArea.addEventListener('drop', handleDrop, false);
-      function handleDrop(e) {
-        let dt = e.dataTransfer;
-        let files = dt.files;
-        handleFiles(files);
-      }
+
+      // Input de archivos
+      const fileInput = document.getElementById('file-input');
       fileInput.addEventListener('change', (e) => {
-        let files = e.target.files;
+        const files = e.target.files;
         handleFiles(files);
       });
+
+      // Función para manejar el evento drop
+      function handleDrop(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        const dt = e.dataTransfer;
+        const files = dt.files;
+        handleFiles(files);
+      }
+
+      // Función para procesar archivos
       function handleFiles(files) {
         if (files.length === 0) return;
-        const file = files[0];
-        resultsContainer.innerHTML = '';
-        const fileName = file.name.toLowerCase();
-        if (fileName.endsWith('.xls') || fileName.endsWith('.xlsx')) {
-          readExcel(file);
-        } else if (fileName.endsWith('.html') || fileName.endsWith('.htm')) {
+        cargarEstado().then(() => {
+          const file = files[0];
+          const resultsContainer = document.getElementById('results');
+          resultsContainer.innerHTML = '';
+          // Siempre leer como HTML, independientemente de la extensión del archivo
           readHtml(file);
-        } else {
-          alert('Formato de archivo no soportado.');
-        }
+        });
       }
+
       function readExcel(file) {
         const reader = new FileReader();
         reader.onload = function(e) {
-          let data = e.target.result;
-          let workbook = XLSX.read(data, { type: 'binary', cellText: true });
-          let firstSheetName = workbook.SheetNames[0];
-          let worksheet = workbook.Sheets[firstSheetName];
-          const rawData = [];
-          const range = XLSX.utils.decode_range(worksheet['!ref']);
-          for (let r = range.s.r; r <= range.e.r; r++) {
-            const row = [];
-            for (let c = range.s.c; c <= range.e.c; c++) {
-              const cellRef = XLSX.utils.encode_cell({r: r, c: c});
-              const cell = worksheet[cellRef];
-              if (!cell) { row.push(''); continue; }
-              if (cell.t === 'n' && cell.w) { row.push(cell.w); }
-              else { row.push(cell.v); }
+          const data = e.target.result;
+          try {
+            const workbook = XLSX.read(data, { type: 'binary', cellText: true });
+            const firstSheetName = workbook.SheetNames[0];
+            const worksheet = workbook.Sheets[firstSheetName];
+            const rawData = [];
+            const range = XLSX.utils.decode_range(worksheet['!ref']);
+            for (let r = range.s.r; r <= range.e.r; r++) {
+              const row = [];
+              for (let c = range.s.c; c <= range.e.c; c++) {
+                const cellRef = XLSX.utils.encode_cell({ r: r, c: c });
+                const cell = worksheet[cellRef];
+                row.push(cell ? (cell.t === 'n' && cell.w ? cell.w : (cell.v || '')) : '');
+              }
+              rawData.push(row);
             }
-            rawData.push(row);
+            processData(rawData);
+          } catch (err) {
+            showErrorMessage("Error al procesar el archivo Excel: " + err.message);
           }
-          processData(rawData);
         };
         reader.onerror = function(err) {
-          alert("Error al leer el archivo Excel.");
+          showErrorMessage("Error al leer el archivo Excel");
         };
         reader.readAsBinaryString(file);
       }
+
       function readHtml(file) {
         const reader = new FileReader();
         reader.onload = function(e) {
           const htmlText = e.target.result;
-          const parser = new DOMParser();
-          const doc = parser.parseFromString(htmlText, 'text/html');
-          const table = doc.querySelector('table');
-          if (!table) {
-            alert("No se encontró una tabla en el archivo HTML.");
-            return;
+          try {
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(htmlText, 'text/html');
+            const table = doc.querySelector('table');
+            if (!table) {
+              showErrorMessage("No se encontró una tabla en el archivo HTML");
+              return;
+            }
+            const rows = [];
+            table.querySelectorAll('tr').forEach(tr => {
+              const row = [];
+              tr.querySelectorAll('th, td').forEach(cell => row.push(cell.textContent.trim()));
+              rows.push(row);
+            });
+            processData(rows);
+          } catch (err) {
+            showErrorMessage("Error al procesar el archivo HTML: " + err.message);
           }
-          let rows = [];
-          const trElements = table.querySelectorAll('tr');
-          trElements.forEach(tr => {
-            let row = [];
-            const cells = tr.querySelectorAll('th, td');
-            cells.forEach(cell => row.push(cell.textContent.trim()));
-            rows.push(row);
-          });
-          processData(rows);
         };
         reader.onerror = function(err) {
-          alert("Error al leer el archivo HTML.");
+          showErrorMessage("Error al leer el archivo HTML");
         };
         reader.readAsText(file);
       }
-      
-      // Función que genera el texto a copiar para cada cliente
+
+      function showErrorMessage(message) {
+        const resultsContainer = document.getElementById('results');
+        resultsContainer.innerHTML = '';
+        const errorDiv = document.createElement('div');
+        errorDiv.className = 'empty-state';
+        errorDiv.innerHTML = `
+          <i class="fas fa-exclamation-triangle" style="color: var(--danger-color);"></i>
+          <p>${message}. Por favor, verifica el archivo e intenta nuevamente.</p>
+        `;
+        resultsContainer.appendChild(errorDiv);
+      }
+
+
       function getClientCopyText(clientInfo) {
         let text = `Nombre: ${clientInfo.nombre}\n${clientInfo.docLabel}: ${clientInfo.dni}\n`;
-        if(clientInfo.category === "installed") {
+        if (clientInfo.category === "installed") {
           text += "Instalada!";
-        } else if(clientInfo.category === "programmed") {
-          let scheduledTime = clientInfo.rowData[37] || "";
+        } else if (clientInfo.category === "programmed") {
+          const scheduledTime = clientInfo.rowData[37] ? String(clientInfo.rowData[37]).trim() : "";
           let tramo = "";
-          if(scheduledTime.startsWith("08")) tramo = "8 a 12";
-          else if(scheduledTime.startsWith("12")) tramo = "12 a 4";
-          else if(scheduledTime.startsWith("16") || scheduledTime.startsWith("4")) tramo = "4 a 8";
+          if (scheduledTime.startsWith("08")) tramo = "8 a 12";
+          else if (scheduledTime.startsWith("12")) tramo = "12 a 4";
+          else if (scheduledTime.startsWith("16") || scheduledTime.startsWith("4")) tramo = "4 a 8";
           else tramo = scheduledTime;
           text += `Programado para: ${clientInfo.rowData[36]} de ${tramo}`;
-        } else if(clientInfo.category === "reviewed") {
+        } else if (clientInfo.category === "reviewed") {
           text += `Número de contacto: ${clientInfo.rowData[9] || ''}\nDistrito: ${clientInfo.rowData[13] || ''}\nLlamar a programar por favor`;
-        } else if(clientInfo.category === "notInstalled") {
-          let scheduledTime = clientInfo.rowData[37] || "";
+        } else if (clientInfo.category === "notInstalled") {
+          const scheduledTime = clientInfo.rowData[37] ? String(clientInfo.rowData[37]).trim() : "";
           let tramo = "";
-          if(scheduledTime.startsWith("08")) tramo = "8 a 12";
-          else if(scheduledTime.startsWith("12")) tramo = "12 a 4";
-          else if(scheduledTime.startsWith("16") || scheduledTime.startsWith("4")) tramo = "4 a 8";
+          if (scheduledTime.startsWith("08")) tramo = "8 a 12";
+          else if (scheduledTime.startsWith("12")) tramo = "12 a 4";
+          else if (scheduledTime.startsWith("16") || scheduledTime.startsWith("4")) tramo = "4 a 8";
           else tramo = scheduledTime;
           text += `Celular: ${clientInfo.rowData[9] || ''}\nDistrito: ${clientInfo.rowData[13] || ''}\nProgramado para: ${clientInfo.rowData[36]} de ${tramo}\nMe puede facilitar información del status de este cliente por favor`;
-        } else if(clientInfo.category === "inProgress") {
+        } else if (clientInfo.category === "inProgress") {
           text += "En progreso";
-        } else if(clientInfo.category === "desaprobados") {
+        } else if (clientInfo.category === "desaprobados") {
           text += `${clientInfo.rowData[24] || ''} - ${clientInfo.rowData[25] || ''}`;
         }
         return text;
       }
 
       function processData(rows) {
-        currentRows = rows;
         const now = new Date();
         function updateCount(categoryContainer) {
           categoryContainer.countSpan.textContent = " (" + categoryContainer.clientsContainer.childElementCount + ")";
         }
         const createCategoryContainer = (title, iconClass) => {
-          const container = document.createElement('div');
-          const header = document.createElement('h2');
+          const categorySection = document.createElement('div');
+          categorySection.classList.add('category-section');
+          const header = document.createElement('div');
+          header.classList.add('category-header');
           header.style.cursor = 'pointer';
-          const categoryHeader = document.createElement('div');
-          categoryHeader.classList.add('category-header');
-          const iconSpan = document.createElement('span');
-          iconSpan.className = `category-icon ${iconClass}`;
-          iconSpan.setAttribute('aria-hidden', 'true');
-          const titleSpan = document.createElement('span');
-          titleSpan.textContent = title;
-          const countSpan = document.createElement('span');
-          countSpan.textContent = " (0)";
-          countSpan.style.fontSize = "0.8em";
-          countSpan.style.marginLeft = "10px";
-          const toggleIndicator = document.createElement('span');
-          toggleIndicator.style.fontSize = "0.8em";
-          toggleIndicator.style.marginLeft = "10px";
-          toggleIndicator.textContent = "Ocultar [-]";
-          categoryHeader.appendChild(iconSpan);
-          categoryHeader.appendChild(titleSpan);
-          categoryHeader.appendChild(countSpan);
-          categoryHeader.appendChild(toggleIndicator);
-          header.appendChild(categoryHeader);
-          const clientsContainer = document.createElement('div');
-          clientsContainer.classList.add('clients-container');
-          clientsContainer.style.display = 'flex';
-          container.appendChild(header);
-          container.appendChild(clientsContainer);
           header.addEventListener('click', () => {
-            if(clientsContainer.style.display === 'none'){
-              clientsContainer.style.display = 'flex';
+            if (clientsContainer.style.display === 'none') {
+              clientsContainer.style.display = 'grid';
               toggleIndicator.textContent = 'Ocultar [-]';
             } else {
               clientsContainer.style.display = 'none';
               toggleIndicator.textContent = 'Ver [+]';
             }
           });
-          return { container, clientsContainer, countSpan };
+          const iconSpan = document.createElement('i');
+          iconSpan.className = `category-icon ${iconClass}`;
+          const titleSpan = document.createElement('span');
+          titleSpan.classList.add('category-title');
+          titleSpan.textContent = title;
+          const countSpan = document.createElement('span');
+          countSpan.classList.add('category-count');
+          countSpan.textContent = " (0)";
+          const toggleIndicator = document.createElement('span');
+          toggleIndicator.classList.add('category-toggle');
+          toggleIndicator.textContent = 'Ocultar [-]';
+
+          header.appendChild(iconSpan);
+          header.appendChild(titleSpan);
+          header.appendChild(countSpan);
+          header.appendChild(toggleIndicator);
+          categorySection.appendChild(header);
+
+          const clientsContainer = document.createElement('div');
+          clientsContainer.classList.add('clients-container');
+          categorySection.appendChild(clientsContainer);
+
+          return { container: categorySection, clientsContainer, countSpan };
         };
+
 
         const installed = createCategoryContainer("Clientes instalados", "fas fa-check-circle");
         const programmed = createCategoryContainer("Clientes programados", "fas fa-calendar-check");
@@ -445,7 +1006,7 @@
 
         const clientsData = [];
         for (let i = 1; i < rows.length; i++) {
-          let row = rows[i];
+          const row = rows[i];
           try {
             let nombre = row[7] || '';
             let dni = row[6] || '';
@@ -471,32 +1032,36 @@
             let category = "";
             if (estadoOrden === "ejecutada") {
               category = "installed";
-            } else if (statePedido === "validado" && estadoOrden === "programada" && row[36] && row[36].trim() !== "" && row[37] && row[37].trim() !== "") {
-              let scheduledDateStr = row[36].trim();
-              let scheduledTimeStr = row[37].trim();
-              let dateParts = scheduledDateStr.split("-");
-              if (dateParts.length < 3) {
-                category = "desaprobados";
-              } else {
-                let day = parseInt(dateParts[0], 10);
-                let month = parseInt(dateParts[1], 10) - 1;
-                let year = parseInt(dateParts[2], 10);
-                let timeParts = scheduledTimeStr.split(/[:\s]+/);
-                let hour = parseInt(timeParts[0], 10);
-                let minute = parseInt(timeParts[1], 10);
-                let second = parseInt(timeParts[2], 10);
-                if (timeParts.length > 3) {
-                  let ampm = timeParts[3].toUpperCase();
-                  if (ampm === "PM" && hour < 12) { hour += 12; }
-                  if (ampm === "AM" && hour === 12) { hour = 0; }
-                }
-                let scheduledDateTime = new Date(year, month, day, hour, minute, second);
-                let scheduledEndTime = new Date(scheduledDateTime.getTime() + 4 * 60 * 60 * 1000);
-                if (now <= scheduledEndTime) {
-                  category = "programmed";
+            } else if (
+              statePedido === "validado" &&
+              estadoOrden === "programada" &&
+              row[36] && row[37]
+            ) {
+              const scheduledDateStr = row[36] ? String(row[36]).trim() : "";
+              const scheduledTimeStr = row[37] ? String(row[37]).trim() : "";
+              if (scheduledDateStr !== "" && scheduledTimeStr !== "") {
+                const dateParts = scheduledDateStr.split("-");
+                if (dateParts.length < 3) {
+                  category = "desaprobados";
                 } else {
-                  category = "notInstalled";
+                  const day = parseInt(dateParts[0], 10);
+                  const month = parseInt(dateParts[1], 10) - 1;
+                  const year = parseInt(dateParts[2], 10);
+                  const timeParts = scheduledTimeStr.split(/[:\s]+/);
+                  let hour = parseInt(timeParts[0], 10);
+                  const minute = parseInt(timeParts[1], 10);
+                  const second = parseInt(timeParts[2], 10);
+                  if (timeParts.length > 3) {
+                    const ampm = timeParts[3].toUpperCase();
+                    if (ampm === "PM" && hour < 12) { hour += 12; }
+                    if (ampm === "AM" && hour === 12) { hour = 0; }
+                  }
+                  const scheduledDateTime = new Date(year, month, day, hour, minute, second);
+                  const scheduledEndTime = new Date(scheduledDateTime.getTime() + 4 * 60 * 60 * 1000);
+                  category = (now <= scheduledEndTime) ? "programmed" : "notInstalled";
                 }
+              } else {
+                category = "desaprobados";
               }
             } else if (statePedido === "revisado") {
               category = "reviewed";
@@ -517,61 +1082,85 @@
           const nombre = clientInfo.nombre;
           const dni = clientInfo.dni;
           const docLabel = clientInfo.docLabel;
-          const clientDiv = document.createElement('div');
-          clientDiv.classList.add('client-block');
+          const clientBlock = document.createElement('div');
+          clientBlock.classList.add('client-block');
+          clientBlock.classList.add(category);
 
           let contentHTML = `
-            <p>Nombre: ${nombre}</p>
-            <p>${docLabel}: <span class="dni" style="cursor: pointer; text-decoration: underline;">${dni}</span></p>
+            <div class="client-info">
+              <p class="client-name">${nombre}</p>
+              <div class="client-doc">
+                <span class="doc-label">${docLabel}</span>
+                <span class="dni">${dni}</span>
+              </div>
           `;
+          let statusText = "";
+          let statusClass = "";
+          let statusIcon = "";
+
           if (category === "installed") {
-            contentHTML += `<p>Instalada!</p>`;
+            statusText = "Instalada!";
+            statusClass = "installed";
+            statusIcon = '<i class="fas fa-check-circle client-status-icon"></i>';
           } else if (category === "programmed") {
-            let scheduledTime = row[37] || "";
+            const scheduledTime = row[37] ? String(row[37]).trim() : "";
             let tramo = "";
-            if (scheduledTime.startsWith("08")) {
-              tramo = "8 a 12";
-            } else if (scheduledTime.startsWith("12")) {
-              tramo = "12 a 4";
-            } else if (scheduledTime.startsWith("16") || scheduledTime.startsWith("4")) {
-              tramo = "4 a 8";
-            } else {
-              tramo = scheduledTime;
-            }
-            contentHTML += `<p>Programado para: ${row[36]} de ${tramo}</p>`;
+            if (scheduledTime.startsWith("08")) { tramo = "8 a 12"; }
+            else if (scheduledTime.startsWith("12")) { tramo = "12 a 4"; }
+            else if (scheduledTime.startsWith("16") || scheduledTime.startsWith("4")) { tramo = "4 a 8"; }
+            else { tramo = scheduledTime; }
+            statusText = `Programado para: ${row[36]} de ${tramo}`;
+            statusClass = "programmed";
+            statusIcon = '<i class="fas fa-calendar-alt client-status-icon"></i>';
           } else if (category === "reviewed") {
+            statusText = `Revisado`;
+            statusClass = "warning";
+            statusIcon = '<i class="fas fa-search client-status-icon"></i>';
             contentHTML += `
-              <p>Número de contacto: ${row[9] || ''}</p>
-              <p>Distrito: ${row[13] || ''}</p>
-              <p>Llamar a programar por favor</p>
+              <div class="client-detail">
+                <i class="fas fa-phone"></i>${row[9] || ''}
+              </div>
+              <div class="client-detail">
+                <i class="fas fa-map-marker-alt"></i>${row[13] || ''}
+              </div>
             `;
           } else if (category === "notInstalled") {
-            let scheduledTime = row[37] || "";
+            const scheduledTime = row[37] ? String(row[37]).trim() : "";
             let tramo = "";
-            if (scheduledTime.startsWith("08")) {
-              tramo = "8 a 12";
-            } else if (scheduledTime.startsWith("12")) {
-              tramo = "12 a 4";
-            } else if (scheduledTime.startsWith("16") || scheduledTime.startsWith("4")) {
-              tramo = "4 a 8";
-            } else {
-              tramo = scheduledTime;
-            }
-            contentHTML += `
-              <p>Celular: ${row[9] || ''}</p>
-              <p>Distrito: ${row[13] || ''}</p>
-              <p>Programado para: ${row[36]} de ${tramo}</p>
-              <p>Me puede facilitar información del status de este cliente por favor</p>
+            if (scheduledTime.startsWith("08")) { tramo = "8 a 12"; }
+            else if (scheduledTime.startsWith("12")) { tramo = "12 a 4"; }
+            else if (scheduledTime.startsWith("16") || scheduledTime.startsWith("4")) { tramo = "4 a 8"; }
+            else { tramo = scheduledTime; }
+            statusText = `No Instalado`;
+            statusClass = "danger";
+            statusIcon = '<i class="fas fa-times-circle client-status-icon"></i>';
+             contentHTML += `
+              <div class="client-detail">
+                <i class="fas fa-mobile-alt"></i>${row[9] || ''}
+              </div>
+              <div class="client-detail">
+                <i class="fas fa-map-marker-alt"></i>${row[13] || ''}
+              </div>
+              <div class="client-detail">
+                <i class="fas fa-calendar"></i>${row[36]} ${tramo}
+              </div>
             `;
           } else if (category === "inProgress") {
-            contentHTML += `<p>En progreso</p>`;
+            statusText = "En progreso";
+            statusClass = "inProgress";
+            statusIcon = '<i class="fas fa-spinner fa-spin client-status-icon"></i>';
           } else if (category === "desaprobados") {
-            contentHTML += `<p>${row[24] || ''} - ${row[25] || ''}</p>`;
+            statusText = "Desaprobado";
+            statusClass = "desaprobados";
+            statusIcon = '<i class="fas fa-ban client-status-icon"></i>';
+            contentHTML += `<p class="client-detail">${row[24] || ''} - ${row[25] || ''}</p>`;
           }
-          clientDiv.innerHTML = contentHTML;
+          contentHTML += `<span class="highlight-status ${statusClass}">${statusIcon}${statusText}</span></div>`;
+          clientBlock.innerHTML = contentHTML;
 
-          // Evento para copiar solo el DNI (al hacer clic sobre el span se copia el documento)
-          const dniSpan = clientDiv.querySelector('.dni');
+
+          // Evento para copiar el DNI
+          const dniSpan = clientBlock.querySelector('.dni');
           dniSpan.addEventListener('click', () => {
             const originalText = dniSpan.textContent;
             navigator.clipboard.writeText(originalText)
@@ -582,39 +1171,37 @@
               .catch(err => { alert(`Error al copiar el ${docLabel}.`); });
           });
 
-          // Contenedor de botones
+          // Botones de acción
           const buttonsContainer = document.createElement('div');
           buttonsContainer.classList.add('client-buttons');
 
           const copyButton = document.createElement('button');
-          copyButton.textContent = 'Copiar';
-          // Verificamos si el cliente ya está marcado como copiado
+          copyButton.classList.add('btn-copy');
+          copyButton.innerHTML = '<i class="fas fa-copy"></i> Copiar';
           if (isCopied(dni)) {
             copyButton.textContent = '✔ Copiado!';
-            copyButton.style.backgroundColor = "#4CAF50";
-            clientDiv.style.opacity = "0.5";
+            copyButton.classList.add('copied');
+            clientBlock.style.opacity = "0.7";
             copyButton.dataset.copied = "true";
           } else {
             copyButton.dataset.copied = "false";
           }
           buttonsContainer.appendChild(copyButton);
 
-          // Acción para el botón Copiar
           copyButton.addEventListener('click', () => {
             if (copyButton.dataset.copied === "true") {
-              // Quitar estado copiado
-              copyButton.textContent = 'Copiar';
-              copyButton.style.backgroundColor = "#6c63ff";
-              clientDiv.style.opacity = "1";
+              copyButton.innerHTML = '<i class="fas fa-copy"></i> Copiar';
+              copyButton.classList.remove('copied');
+              clientBlock.style.opacity = "1";
               copyButton.dataset.copied = "false";
               setCopiedState(dni, false);
             } else {
               const textToCopy = getClientCopyText(clientInfo);
               navigator.clipboard.writeText(textToCopy)
                 .then(() => {
-                  copyButton.textContent = '✔ Copiado!';
-                  copyButton.style.backgroundColor = "#4CAF50";
-                  clientDiv.style.opacity = "0.5";
+                  copyButton.innerHTML = '<i class="fas fa-check"></i> Copiado!';
+                  copyButton.classList.add('copied');
+                  clientBlock.style.opacity = "0.7";
                   copyButton.dataset.copied = "true";
                   setCopiedState(dni, true);
                 })
@@ -622,84 +1209,94 @@
             }
           });
 
-          // Botón "Derivado" presente en todos los bloques con funcionalidad de toggle
           const derivarButton = document.createElement('button');
+          derivarButton.classList.add('btn-derive');
           if (isDniDerived(dni)) {
-            derivarButton.textContent = 'Derivado ✓';
-            clientDiv.classList.add('derivado');
+            derivarButton.classList.add('derived');
+            derivarButton.innerHTML = '<i class="fas fa-user-check"></i> Derivado ✓';
+            clientBlock.classList.add('derivado');
           } else {
-            derivarButton.textContent = 'Derivado';
+            derivarButton.innerHTML = '<i class="fas fa-user-plus"></i> Derivado';
           }
           derivarButton.addEventListener('click', () => {
             if (isDniDerived(dni)) {
               removeDerivedDni(dni);
-              derivarButton.textContent = 'Derivado';
-              clientDiv.classList.remove('derivado');
+              derivarButton.classList.remove('derived');
+              derivarButton.innerHTML = '<i class="fas fa-user-plus"></i> Derivado';
+              clientBlock.classList.remove('derivado');
             } else {
               saveDerivedDni(dni);
-              derivarButton.textContent = 'Derivado ✓';
-              clientDiv.classList.add('derivado');
+              derivarButton.classList.add('derived');
+              derivarButton.innerHTML = '<i class="fas fa-user-check"></i> Derivado ✓';
+              clientBlock.classList.add('derivado');
             }
           });
           buttonsContainer.appendChild(derivarButton);
+          clientBlock.appendChild(buttonsContainer);
 
-          clientDiv.appendChild(buttonsContainer);
-
-          // Crear el contenedor de notas con posición original y con fecha visible
+          // Notas
           const notesContainer = document.createElement('div');
           notesContainer.className = 'client-notes-container';
-          notesContainer.innerHTML = `<p style="margin-bottom: 5px;">Notas:</p>`;
+          notesContainer.innerHTML = `<p class="notes-label"><i class="fas fa-sticky-note"></i> Notas:</p>`;
           const noteData = getNoteDataForDni(dni);
           let noteElement = createNoteElement(noteData.note, noteData.timestamp);
           noteElement.dataset.dni = dni;
-          // Al hacer clic en el recuadro de nota se abre el popup de edición
           noteElement.addEventListener('click', function(e) {
             openNoteModal(dni, noteElement);
           });
           notesContainer.appendChild(noteElement);
-          clientDiv.appendChild(notesContainer);
+          clientBlock.appendChild(notesContainer);
 
-          // Agregar el bloque al contenedor según la categoría
-          if (category === "installed") { installed.clientsContainer.appendChild(clientDiv); updateCount(installed); }
-          else if (category === "programmed") { programmed.clientsContainer.appendChild(clientDiv); updateCount(programmed); }
-          else if (category === "reviewed") { reviewed.clientsContainer.appendChild(clientDiv); updateCount(reviewed); }
-          else if (category === "notInstalled") { notInstalled.clientsContainer.appendChild(clientDiv); updateCount(notInstalled); }
-          else if (category === "inProgress") { inProgress.clientsContainer.appendChild(clientDiv); updateCount(inProgress); }
-          else if (category === "desaprobados") { desaprobados.clientsContainer.appendChild(clientDiv); updateCount(desaprobados); }
+          if (category === "installed") { installed.clientsContainer.appendChild(clientBlock); updateCount(installed); }
+          else if (category === "programmed") { programmed.clientsContainer.appendChild(clientBlock); updateCount(programmed); }
+          else if (category === "reviewed") { reviewed.clientsContainer.appendChild(clientBlock); updateCount(reviewed); }
+          else if (category === "notInstalled") { notInstalled.clientsContainer.appendChild(clientBlock); updateCount(notInstalled); }
+          else if (category === "inProgress") { inProgress.clientsContainer.appendChild(clientBlock); updateCount(inProgress); }
+          else if (category === "desaprobados") { desaprobados.clientsContainer.appendChild(clientBlock); updateCount(desaprobados); }
         });
-        resultsContainer.appendChild(installed.container);
-        resultsContainer.appendChild(programmed.container);
-        resultsContainer.appendChild(reviewed.container);
-        resultsContainer.appendChild(notInstalled.container);
-        resultsContainer.appendChild(inProgress.container);
-        resultsContainer.appendChild(desaprobados.container);
+        const resultsContainer = document.getElementById('results');
+        resultsContainer.innerHTML = '';
+        if(installed.clientsContainer.children.length > 0) resultsContainer.appendChild(installed.container);
+        if(programmed.clientsContainer.children.length > 0) resultsContainer.appendChild(programmed.container);
+        if(reviewed.clientsContainer.children.length > 0) resultsContainer.appendChild(reviewed.container);
+        if(notInstalled.clientsContainer.children.length > 0) resultsContainer.appendChild(notInstalled.container);
+        if(inProgress.clientsContainer.children.length > 0) resultsContainer.appendChild(inProgress.container);
+        if(desaprobados.clientsContainer.children.length > 0) resultsContainer.appendChild(desaprobados.container);
+
+        if(resultsContainer.children.length === 0) {
+          resultsContainer.innerHTML = `
+            <div class="empty-state">
+              <i class="far fa-folder-open"></i>
+              <p>No se encontraron clientes en el archivo procesado para mostrar.</p>
+            </div>
+          `;
+        }
         applySearchFilter();
       }
 
-      // Función para crear el recuadro de nota con truncado y fecha siempre visible
       function createNoteElement(note, timestamp) {
         const container = document.createElement('div');
         container.classList.add('client-notes');
-        let truncated = note;
-        if (note.length > 20) {
-          truncated = note.substring(0,20) + "...";
-        }
-        // Contenedor principal: muestra el contenido (truncado o completo)
-        const contentSpan = document.createElement('span');
-        contentSpan.classList.add('note-content');
-        contentSpan.textContent = truncated;
-        container.appendChild(contentSpan);
-        // Agrega la fecha (timestamp) siempre visible debajo del contenido
-        if (timestamp) {
-          const tsSpan = document.createElement('span');
-          tsSpan.className = "note-timestamp";
-          tsSpan.textContent = `(${timestamp})`;
-          container.appendChild(tsSpan);
+        if (!note) {
+          container.innerHTML = ''; // Will display "Sin notas" placeholder
+        } else {
+          let truncated = note;
+          if (note.length > 20) { truncated = note.substring(0,20) + "..."; }
+          const contentSpan = document.createElement('span');
+          contentSpan.classList.add('note-content');
+          contentSpan.textContent = truncated;
+          container.appendChild(contentSpan);
+          if (timestamp) {
+            const tsSpan = document.createElement('span');
+            tsSpan.className = "note-timestamp";
+            tsSpan.textContent = `(${timestamp})`;
+            container.appendChild(tsSpan);
+          }
         }
         return container;
       }
 
-      // Función para abrir el modal de edición de nota
+
       function openNoteModal(dni, noteElement) {
         const modal = document.getElementById('note-modal');
         const textarea = document.getElementById('note-modal-textarea');
@@ -717,7 +1314,9 @@
           saveButton.removeEventListener('click', saveHandler);
           closeButton.removeEventListener('click', closeModal);
           closeSpan.removeEventListener('click', closeModal);
+          window.onclick = null; // Remove window onclick handler
         }
+
         function saveHandler() {
           const newNote = textarea.value;
           saveNotesForDni(dni, newNote);
@@ -733,10 +1332,27 @@
         saveButton.addEventListener('click', saveHandler);
         closeButton.addEventListener('click', closeModal);
         closeSpan.addEventListener('click', closeModal);
+
         window.onclick = function(event) {
-          if (event.target == modal) { closeModal(); }
+          if (event.target == modal) {
+            closeModal();
+          }
         };
       }
+
+
+      // Filtro de búsqueda
+      const searchInput = document.getElementById('search-input');
+      function applySearchFilter() {
+        const searchTerm = searchInput.value.toLowerCase();
+        document.querySelectorAll('.clients-container').forEach(container => {
+          container.childNodes.forEach(clientBlock => {
+            const blockText = clientBlock.textContent.toLowerCase();
+            clientBlock.style.display = blockText.includes(searchTerm) ? '' : 'none';
+          });
+        });
+      }
+      searchInput.addEventListener('input', applySearchFilter);
     });
   </script>
 </body>
